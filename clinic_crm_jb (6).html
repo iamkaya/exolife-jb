@@ -1,0 +1,1522 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Exolife CRM</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Noto+Sans+TC:wght@300;400;500&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* ── Exolife Brand Colors ── */
+  --navy:#29285e;       /* deep navy - primary brand */
+  --teal-b:#378ba7;     /* brand teal - secondary */
+  --ice:#e1f0f5;        /* ice blue - light bg */
+
+  /* ── Derived palette ── */
+  --bg:#f4f9fb;         /* page background - very light ice */
+  --bg2:#eaf4f8;        /* slightly deeper ice */
+  --bg3:#dceef4;
+  --white:#fff;
+  --ink:#1a1a3e;        /* near-navy for text */
+  --ink2:#2e3a5c;
+  --ink3:#6b7a99;
+  --ink4:#a0aec0;
+  --border:rgba(41,40,94,0.10);
+  --border2:rgba(41,40,94,0.20);
+
+  /* ── Accent roles (mapped to brand) ── */
+  --gold:#378ba7;       /* primary accent = brand teal */
+  --gold2:#2a6e88;      /* deeper teal */
+  --gold-light:#b8dce8; /* light teal */
+  --gold-soft:rgba(55,139,167,0.10);
+
+  /* ── Status colors ── */
+  --sage:#2e8b7a;       --sage-soft:rgba(46,139,122,0.12);
+  --rose:#c0624a;       --rose-soft:rgba(192,98,74,0.12);
+  --blush:#8c6fa6;      --blush-soft:rgba(140,111,166,0.12);
+
+  /* ── Category colors ── */
+  --teal:#378ba7;       --teal-soft:rgba(55,139,167,0.12);   /* 疼痛治療 = brand teal */
+  --mauve:#29285e;      --mauve-soft:rgba(41,40,94,0.10);    /* 抗衰老 = brand navy */
+
+  --shadow:0 2px 16px rgba(41,40,94,0.07);
+  --shadow-lg:0 8px 40px rgba(41,40,94,0.14);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:var(--bg); color:var(--ink); font-family:'Noto Sans TC',sans-serif; font-size:13px; line-height:1.6; min-height:100vh; display:flex; }
+
+/* ── SIDEBAR ── */
+.sidebar { width:220px; flex-shrink:0; background:var(--navy); display:flex; flex-direction:column; position:fixed; top:0; left:0; bottom:0; z-index:100; overflow-y:auto; }
+.sidebar::before { content:''; position:absolute; top:0; left:0; right:0; height:180px; background:radial-gradient(ellipse at 60% 0%, rgba(55,139,167,0.22), transparent 70%); pointer-events:none; }
+.s-logo { padding:22px 20px 16px; border-bottom:1px solid rgba(255,255,255,0.06); position:relative; }
+.s-en { font-family:'Cormorant Garamond',serif; font-size:20px; font-weight:300; letter-spacing:3px; color:#FAF8F4; text-transform:uppercase; }
+.s-zh { font-size:10px; color:rgba(250,248,244,0.32); letter-spacing:2px; margin-top:2px; }
+.s-line { width:22px; height:1px; background:var(--teal-b); margin-top:8px; opacity:0.7; }
+.nav { padding:12px 10px; flex:1; }
+.nav-g { font-size:9px; color:rgba(250,248,244,0.22); letter-spacing:2px; text-transform:uppercase; padding:12px 10px 5px; }
+.ni { display:flex; align-items:center; gap:9px; padding:8px 10px; border-radius:7px; cursor:pointer; color:rgba(250,248,244,0.48); font-size:12px; font-weight:300; transition:all .18s; margin-bottom:1px; position:relative; }
+.ni:hover { background:rgba(255,255,255,0.05); color:rgba(250,248,244,0.82); }
+.ni.active { background:rgba(55,139,167,0.18); color:#b8dce8; }
+.ni.active::before { content:''; position:absolute; left:0; top:50%; transform:translateY(-50%); width:2px; height:15px; background:var(--teal-b); border-radius:2px; }
+.ni-ic { width:16px; text-align:center; font-size:13px; opacity:.7; }
+.ni-badge { margin-left:auto; background:rgba(55,139,167,0.28); color:#b8dce8; font-size:10px; padding:1px 6px; border-radius:20px; font-family:'DM Mono',monospace; }
+.s-foot { padding:12px 18px; border-top:1px solid rgba(255,255,255,0.05); font-size:10px; color:rgba(250,248,244,0.16); letter-spacing:1px; }
+
+/* ── MAIN ── */
+.main { margin-left:220px; flex:1; min-height:100vh; display:flex; flex-direction:column; background:var(--bg); }
+.topbar { background:var(--white); border-bottom:1px solid var(--border); padding:0 28px; height:56px; display:flex; align-items:center; gap:14px; position:sticky; top:0; z-index:50; box-shadow:0 1px 0 rgba(41,40,94,0.06); }
+.topbar-title { font-family:'Cormorant Garamond',serif; font-size:19px; font-weight:300; font-style:italic; color:var(--navy); letter-spacing:0.5px; }
+.topbar-r { margin-left:auto; display:flex; gap:9px; }
+.content { padding:24px 28px; flex:1; }
+
+/* ── VIEWS ── */
+.view { display:none; }
+.view.active { display:block; animation:fu .22s ease; }
+@keyframes fu { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:none; } }
+
+/* ── BUTTONS ── */
+.btn { display:inline-flex; align-items:center; gap:5px; padding:6px 16px; border-radius:6px; font-size:12px; font-family:'Noto Sans TC',sans-serif; cursor:pointer; border:none; transition:all .18s; }
+.btn-gold { background:var(--navy); color:#e1f0f5; border:1px solid rgba(41,40,94,0.0); }
+.btn-gold:hover { background:#1e1d4a; }
+.btn-outline { background:transparent; color:var(--navy); border:1px solid var(--border2); }
+.btn-outline:hover { background:var(--ice); border-color:var(--teal-b); }
+.btn-sm { padding:5px 11px; font-size:11px; }
+
+/* ── STAT CARDS ── */
+.stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px; }
+.stats-row-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:20px; }
+.stat-card { background:var(--white); border:1px solid var(--border); border-radius:11px; padding:16px 18px; position:relative; overflow:hidden; box-shadow:var(--shadow); }
+.stat-card::after { content:''; position:absolute; top:0; right:0; width:50px; height:50px; background:radial-gradient(circle at 100% 0%, rgba(225,240,245,0.8), transparent 70%); }
+.stat-lbl { font-size:10px; letter-spacing:1.4px; text-transform:uppercase; color:var(--ink4); margin-bottom:7px; }
+.stat-v { font-family:'Cormorant Garamond',serif; font-size:30px; font-weight:300; line-height:1; }
+.stat-vm { font-family:'DM Mono',monospace; font-size:19px; font-weight:300; line-height:1; }
+.stat-sub { font-size:11px; color:var(--ink4); margin-top:4px; }
+
+/* ── SPLIT STAT CARD ── */
+.split-card { background:var(--white); border:1px solid var(--border); border-radius:11px; padding:14px 16px; box-shadow:var(--shadow); }
+.split-title { font-size:9px; letter-spacing:1.4px; text-transform:uppercase; color:var(--ink4); margin-bottom:12px; }
+.split-body { display:grid; grid-template-columns:1fr 1px 1fr; gap:0; }
+.split-sep { background:var(--border); margin:0 12px; }
+.split-half {}
+.split-lbl { display:flex; align-items:center; gap:5px; font-size:9px; color:var(--ink4); letter-spacing:1px; text-transform:uppercase; margin-bottom:4px; }
+.split-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; display:inline-block; }
+.split-v { font-family:'Cormorant Garamond',serif; font-size:28px; font-weight:300; line-height:1; }
+.split-sub { font-size:10px; color:var(--ink4); margin-top:3px; }
+.right-pad { padding-left:12px; }
+
+/* ── TABLES ── */
+.tcrd { background:var(--white); border:1px solid rgba(41,40,94,0.10); border-radius:11px; overflow:hidden; box-shadow:var(--shadow); }
+.ttb { padding:11px 16px; border-bottom:1px solid var(--border); display:flex; gap:9px; align-items:center; flex-wrap:wrap; }
+.si { flex:1; min-width:140px; background:var(--bg2); border:1px solid var(--border); border-radius:6px; padding:6px 12px; color:var(--ink); font-family:'Noto Sans TC',sans-serif; font-size:12px; outline:none; transition:border-color .2s; }
+.si:focus { border-color:var(--teal-b); }
+.si::placeholder { color:var(--ink4); }
+.fsel { background:var(--bg2); border:1px solid var(--border); border-radius:6px; padding:6px 10px; color:var(--ink2); font-family:'Noto Sans TC',sans-serif; font-size:12px; outline:none; cursor:pointer; }
+.fsel:focus { border-color:var(--teal-b); }
+.tscroll { overflow-x:auto; }
+table { width:100%; border-collapse:collapse; }
+thead th { padding:9px 14px; text-align:left; font-size:10px; font-weight:400; color:var(--ink3); letter-spacing:1.3px; text-transform:uppercase; border-bottom:1px solid var(--border); background:var(--bg2); }
+tbody tr { border-bottom:1px solid var(--border); cursor:pointer; transition:background .12s; }
+tbody tr:last-child { border-bottom:none; }
+tbody tr:hover { background:var(--bg2); }
+tbody td { padding:11px 14px; font-size:12px; color:var(--ink2); }
+.cp { color:var(--ink); font-weight:500; }
+.cc { font-family:'DM Mono',monospace; font-size:11px; color:var(--teal-b); }
+.cm { font-family:'DM Mono',monospace; font-size:12px; }
+
+/* ── BADGES ── */
+.bdg { display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border-radius:20px; font-size:10px; }
+.bdg::before { content:''; width:5px; height:5px; border-radius:50%; flex-shrink:0; }
+.b-sage { background:var(--sage-soft); color:#3d6e57; } .b-sage::before { background:#7A9E8A; }
+.b-rose { background:var(--rose-soft); color:#8f4a32; } .b-rose::before { background:#C4836A; }
+.b-blush { background:var(--blush-soft); color:#7a4f4b; } .b-blush::before { background:#D4A5A0; }
+.b-gold { background:var(--gold-soft); color:var(--gold2); } .b-gold::before { background:var(--gold); }
+.b-teal { background:var(--teal-soft); color:#2d6b60; } .b-teal::before { background:var(--teal); }
+.b-mauve { background:var(--mauve-soft); color:#6b4f75; } .b-mauve::before { background:var(--mauve); }
+.b-ink { background:rgba(28,26,23,0.06); color:var(--ink3); } .b-ink::before { background:var(--ink4); }
+
+/* ── DASHBOARD ── */
+.dash-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+
+/* ── REF CHART ── */
+.rc-row { margin-bottom:11px; }
+.rc-hd { display:flex; justify-content:space-between; margin-bottom:4px; }
+.rc-lbl { font-size:11px; color:var(--ink2); }
+.rc-val { font-family:'DM Mono',monospace; font-size:11px; color:var(--ink4); }
+.rc-track { background:var(--cream3); border-radius:3px; height:5px; overflow:hidden; }
+.rc-fill { height:100%; border-radius:3px; transition:width .8s cubic-bezier(.16,1,.3,1); }
+
+/* ── MODAL ── */
+.ov { display:none; position:fixed; inset:0; background:rgba(10,10,40,0.55); z-index:200; align-items:center; justify-content:center; backdrop-filter:blur(4px); }
+.ov.open { display:flex; }
+.modal { background:var(--white); border:1px solid var(--border); border-radius:14px; width:600px; max-width:95vw; max-height:90vh; overflow-y:auto; box-shadow:var(--shadow-lg); animation:mi .22s cubic-bezier(.16,1,.3,1); }
+@keyframes mi { from { opacity:0; transform:scale(.96) translateY(10px); } to { opacity:1; transform:none; } }
+.mhd { padding:20px 24px 15px; border-bottom:1px solid var(--border); display:flex; align-items:flex-start; justify-content:space-between; position:sticky; top:0; background:var(--white); z-index:1; }
+.mtitle { font-family:'Cormorant Garamond',serif; font-size:20px; font-weight:300; font-style:italic; color:var(--ink); }
+.msub { font-size:11px; color:var(--ink4); margin-top:1px; }
+.mclose { background:none; border:none; color:var(--ink4); cursor:pointer; font-size:20px; line-height:1; }
+.mclose:hover { color:var(--ink); }
+.mbody { padding:18px 24px 22px; }
+.mft { padding:12px 24px; border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:9px; position:sticky; bottom:0; background:var(--white); }
+
+/* ── FORM ── */
+.fg2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.fg { display:flex; flex-direction:column; gap:4px; }
+.fg.full { grid-column:1/-1; }
+.fg label { font-size:10px; color:var(--ink4); letter-spacing:1px; text-transform:uppercase; }
+.fg input, .fg select, .fg textarea { background:var(--bg2); border:1px solid var(--border); border-radius:6px; padding:7px 10px; color:var(--ink); font-family:'Noto Sans TC',sans-serif; font-size:12px; outline:none; transition:border-color .2s; }
+.fg input:focus, .fg select:focus, .fg textarea:focus { border-color:var(--teal-b); background:var(--white); }
+.fg textarea { resize:vertical; min-height:62px; }
+.fdiv { grid-column:1/-1; display:flex; align-items:center; gap:10px; margin:3px 0; }
+.fdiv span { font-size:10px; color:var(--ink4); letter-spacing:1.3px; text-transform:uppercase; white-space:nowrap; }
+.fdiv::before, .fdiv::after { content:''; flex:1; height:1px; background:var(--border); }
+
+/* ── DETAIL ── */
+.dhero { background:linear-gradient(135deg,var(--navy) 0%,#1e2050 100%); border-radius:11px; padding:20px 22px; margin-bottom:15px; position:relative; overflow:hidden; }
+.dhero::before { content:''; position:absolute; top:0; right:0; width:160px; height:160px; background:radial-gradient(circle at 100% 0%, rgba(55,139,167,0.28), transparent 70%); }
+.hav { width:46px; height:46px; border-radius:50%; background:rgba(55,139,167,0.20); border:1px solid rgba(55,139,167,0.40); display:flex; align-items:center; justify-content:center; font-family:'Cormorant Garamond',serif; font-size:20px; color:var(--gold-light); margin-bottom:10px; }
+.hname { font-family:'Cormorant Garamond',serif; font-size:22px; font-weight:300; color:#FAF8F4; margin-bottom:5px; }
+.hmeta { display:flex; gap:6px; flex-wrap:wrap; }
+.hcode { font-family:'DM Mono',monospace; font-size:11px; color:rgba(184,220,232,.72); }
+.hspend { position:absolute; right:20px; top:20px; text-align:right; }
+.hslbl { font-size:9px; color:rgba(225,240,245,.45); letter-spacing:1.4px; text-transform:uppercase; margin-bottom:2px; }
+.hsval { font-family:'Cormorant Garamond',serif; font-size:24px; font-weight:300; color:#b8dce8; }
+.dtabs { display:flex; margin-bottom:13px; border-bottom:1px solid var(--border); }
+.dtab { padding:7px 14px; font-size:11px; letter-spacing:.6px; text-transform:uppercase; color:var(--ink4); cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-1px; transition:all .15s; }
+.dtab:hover { color:var(--ink2); }
+.dtab.active { color:var(--teal-b); border-bottom-color:var(--teal-b); }
+.dtc { display:none; }
+.dtc.active { display:block; }
+.igrid { display:grid; grid-template-columns:1fr 1fr; }
+.irow { padding:8px 0; border-bottom:1px solid var(--border); padding-right:12px; }
+.irow:nth-last-child(-n+2) { border-bottom:none; }
+.ilbl { font-size:10px; color:var(--ink4); letter-spacing:1px; text-transform:uppercase; }
+.ival { font-size:12px; color:var(--ink); }
+.arow { display:flex; align-items:flex-start; gap:10px; padding:9px 0; border-bottom:1px solid var(--border); }
+.arow:last-child { border-bottom:none; }
+.adot { width:7px; height:7px; border-radius:50%; margin-top:4px; flex-shrink:0; }
+.acnt { flex:1; }
+.atitle { font-size:12px; color:var(--ink); font-weight:500; }
+.asub { font-size:11px; color:var(--ink4); margin-top:1px; }
+.aamt { font-family:'DM Mono',monospace; font-size:13px; color:var(--sage); }
+
+/* ── EMPTY ── */
+.empty-s { text-align:center; padding:40px 20px; color:var(--ink4); }
+.empty-s .ei { font-size:24px; margin-bottom:8px; opacity:.35; }
+.empty-s .et { font-family:'Cormorant Garamond',serif; font-size:15px; font-style:italic; }
+
+/* ── TOAST ── */
+.toast { position:fixed; bottom:22px; right:22px; background:var(--navy); color:#e1f0f5; border:1px solid rgba(55,139,167,.30); border-radius:9px; padding:10px 18px; font-size:12px; display:flex; align-items:center; gap:8px; z-index:300; opacity:0; transform:translateY(8px); transition:all .26s; pointer-events:none; box-shadow:var(--shadow-lg); }
+.toast.show { opacity:1; transform:none; }
+
+::-webkit-scrollbar { width:4px; height:4px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--gold-light); border-radius:10px; }
+
+/* ── CALENDAR ── */
+.cal-cell { border-right:1px solid var(--border); border-bottom:1px solid var(--border); min-height:88px; padding:6px 5px 5px; position:relative; vertical-align:top; }
+.cal-cell:nth-child(7n) { border-right:none; }
+.cal-num { font-size:11px; font-weight:500; color:var(--ink3); margin-bottom:4px; width:22px; height:22px; display:flex; align-items:center; justify-content:center; border-radius:50%; }
+.cal-num.today { background:var(--navy); color:#fff; }
+.cal-num.past { color:var(--ink4); }
+.cal-num.weekend { color:var(--rose); }
+.cal-num.weekend.past { color:rgba(192,98,74,0.4); }
+.cal-evt { font-size:10px; padding:2px 5px; border-radius:3px; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer; line-height:1.4; }
+.cal-evt.pain { background:rgba(55,139,167,0.14); color:#1e6a85; border-left:2px solid #378ba7; }
+.cal-evt.aging { background:rgba(41,40,94,0.10); color:#29285e; border-left:2px solid #29285e; }
+.cal-empty { font-size:10px; color:var(--ink4); opacity:0.3; }
+.cal-cell.other-month .cal-num { color:var(--ink4); opacity:0.4; }
+.cal-cell.other-month .cal-evt { opacity:0.4; }
+.s-en { background:linear-gradient(135deg, #e1f0f5 0%, #378ba7 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+
+/* ── LOGIN SCREEN ── */
+.login-screen {
+  position:fixed; inset:0; background:var(--navy);
+  display:flex; align-items:center; justify-content:center;
+  z-index:9999; flex-direction:column;
+}
+.login-screen::before {
+  content:''; position:absolute; inset:0;
+  background:radial-gradient(ellipse at 50% 0%, rgba(55,139,167,0.25), transparent 65%);
+  pointer-events:none;
+}
+.login-box {
+  background:rgba(255,255,255,0.05);
+  border:1px solid rgba(55,139,167,0.25);
+  border-radius:16px; padding:40px 44px;
+  width:360px; position:relative;
+  backdrop-filter:blur(10px);
+}
+.login-logo {
+  font-family:'Cormorant Garamond',serif;
+  font-size:28px; font-weight:300; letter-spacing:4px;
+  color:#e1f0f5; text-transform:uppercase; text-align:center;
+  margin-bottom:4px;
+}
+.login-sub {
+  font-size:11px; color:rgba(225,240,245,0.4);
+  letter-spacing:2px; text-align:center; margin-bottom:32px;
+}
+.login-label {
+  font-size:10px; color:rgba(225,240,245,0.5);
+  letter-spacing:1.5px; text-transform:uppercase; margin-bottom:8px;
+}
+.login-input {
+  width:100%; background:rgba(255,255,255,0.08);
+  border:1px solid rgba(55,139,167,0.30);
+  border-radius:8px; padding:11px 14px;
+  color:#e1f0f5; font-size:14px; font-family:'Noto Sans TC',sans-serif;
+  outline:none; transition:border-color .2s; margin-bottom:20px;
+  letter-spacing:2px;
+}
+.login-input:focus { border-color:var(--teal-b); }
+.login-input::placeholder { color:rgba(225,240,245,0.2); letter-spacing:0; }
+.login-btn {
+  width:100%; background:var(--teal-b); color:#fff;
+  border:none; border-radius:8px; padding:12px;
+  font-size:13px; font-family:'Noto Sans TC',sans-serif;
+  cursor:pointer; transition:background .2s; letter-spacing:1px;
+}
+.login-btn:hover { background:#2a6e88; }
+.login-error {
+  font-size:11px; color:#f08080; text-align:center;
+  margin-top:12px; min-height:16px;
+}
+.login-role {
+  display:flex; gap:8px; margin-bottom:20px;
+}
+.role-btn {
+  flex:1; padding:8px; border-radius:7px; font-size:12px;
+  font-family:'Noto Sans TC',sans-serif; cursor:pointer;
+  border:1px solid rgba(55,139,167,0.25);
+  background:transparent; color:rgba(225,240,245,0.5);
+  transition:all .18s;
+}
+.role-btn.active {
+  background:rgba(55,139,167,0.20);
+  border-color:var(--teal-b); color:#e1f0f5;
+}
+
+/* ── PERMISSION BADGES ── */
+.perm-badge {
+  display:inline-flex; align-items:center; gap:4px;
+  font-size:10px; padding:2px 8px; border-radius:4px;
+  background:rgba(41,40,94,0.08); color:var(--ink4);
+}
+.admin-only { display:none; }
+body.is-admin .admin-only { display:inline-flex; }
+body.is-admin .admin-only-block { display:block; }
+.admin-only-block { display:none; }
+
+/* ── EDIT MODAL ── */
+.edit-row {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:8px 0; border-bottom:1px solid var(--border);
+}
+.edit-row:last-child { border-bottom:none; }
+.edit-label { font-size:11px; color:var(--ink4); width:80px; flex-shrink:0; }
+.edit-val { font-size:12px; color:var(--ink); flex:1; }
+.edit-input {
+  flex:1; background:var(--bg2); border:1px solid var(--border);
+  border-radius:5px; padding:5px 8px; color:var(--ink);
+  font-family:'Noto Sans TC',sans-serif; font-size:12px; outline:none;
+}
+.edit-input:focus { border-color:var(--teal-b); }
+.edit-select {
+  flex:1; background:var(--bg2); border:1px solid var(--border);
+  border-radius:5px; padding:5px 8px; color:var(--ink);
+  font-family:'Noto Sans TC',sans-serif; font-size:12px; outline:none;
+}
+
+</style>
+</head>
+<body>
+
+
+<!-- LOGIN SCREEN -->
+<div class="login-screen" id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">Exolife <span style="font-size:16px;opacity:0.5">(JB)</span></div>
+    <div class="login-sub">賦源生醫・客戶管理系統</div>
+    <div class="login-label">登入身分</div>
+    <div class="login-role">
+      <button class="role-btn active" id="role-staff" onclick="selectRole('staff')">員工</button>
+      <button class="role-btn" id="role-admin" onclick="selectRole('admin')">管理員</button>
+    </div>
+    <div class="login-label">密碼</div>
+    <input class="login-input" type="password" id="login-pw" placeholder="請輸入密碼" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="login-btn" onclick="doLogin()">登入</button>
+    <div class="login-error" id="login-error"></div>
+  </div>
+</div>
+
+<div id="sync-banner" style="display:none;position:fixed;top:0;left:220px;right:0;z-index:999;padding:8px 20px;font-size:12px;color:#fff;text-align:center;transition:opacity 0.4s;letter-spacing:0.5px;"></div>
+<aside class="sidebar">
+  <div class="s-logo">
+    <div class="s-en">Exolife <span style="font-size:14px;opacity:0.6;letter-spacing:2px">(JB)</span></div>
+    <div class="s-zh">賦源生醫 · 客戶管理系統</div>
+    <div class="s-line"></div>
+  </div>
+  <nav class="nav">
+    <div class="nav-g">主選單</div>
+    <div class="ni active" onclick="showView('dashboard',this)"><span class="ni-ic">◈</span>總覽</div>
+    <div class="ni" onclick="showView('clients',this)"><span class="ni-ic">◎</span>客戶管理<span class="ni-badge" id="client-count">5</span></div>
+    <div class="ni" onclick="showView('transactions',this)"><span class="ni-ic">◇</span>交易記錄</div>
+    <div class="ni" onclick="showView('treatments',this)"><span class="ni-ic">✦</span>療程記錄</div>
+    <div class="ni" onclick="showView('appointments',this)"><span class="ni-ic">◻</span>預約管理</div>
+    <div class="nav-g">分析</div>
+    <div class="ni" onclick="showView('referrals',this)"><span class="ni-ic">◈</span>轉介來源</div>
+  </nav>
+  <div class="s-foot">DEMO · 2025</div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-title" id="page-title">概覽</div>
+    <div class="topbar-r">
+      <button class="btn btn-outline" onclick="openM('mc')">＋ 新增客戶</button>
+      <button class="btn btn-gold" onclick="openM('mt')">＋ 新增交易</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div class="view active" id="view-dashboard">
+      <div style="display:grid;grid-template-columns:1fr 2fr 1fr 1fr;gap:12px;margin-bottom:20px;">
+        <div class="stat-card">
+          <div class="stat-lbl">客戶總數</div>
+          <div class="stat-v" style="color:var(--navy)" id="st-clients">5</div>
+          <div class="stat-sub">本月新增 <span style="color:var(--sage)" id="st-new">+0</span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-lbl">消費金額</div>
+          <div style="display:grid;grid-template-columns:1fr 1px 1fr;gap:0;margin-top:6px;">
+            <!-- 累計 -->
+            <div style="padding-right:16px;">
+              <div style="font-size:9px;color:var(--ink4);letter-spacing:1.2px;text-transform:uppercase;margin-bottom:8px;">累計</div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+                <span style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--ink3);"><span style="width:6px;height:6px;border-radius:50%;background:var(--teal);display:inline-block;"></span>疼痛治療</span>
+                <span class="stat-vm" style="color:var(--teal);font-size:14px;" id="st-total-pain">$0</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--ink3);"><span style="width:6px;height:6px;border-radius:50%;background:var(--mauve);display:inline-block;"></span>抗衰老</span>
+                <span class="stat-vm" style="color:var(--mauve);font-size:14px;" id="st-total-aging">$0</span>
+              </div>
+              <div style="margin-top:8px;padding-top:6px;border-top:1px solid var(--border);display:flex;justify-content:space-between;">
+                <span style="font-size:10px;color:var(--ink4);">合計</span>
+                <span class="stat-vm" style="color:var(--teal-b);font-size:14px;" id="st-rev">$0</span>
+              </div>
+            </div>
+            <!-- divider -->
+            <div style="background:var(--border);margin:0 16px;"></div>
+            <!-- 本月 -->
+            <div style="padding-left:0;">
+              <div style="font-size:9px;color:var(--ink4);letter-spacing:1.2px;text-transform:uppercase;margin-bottom:8px;">本月</div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+                <span style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--ink3);"><span style="width:6px;height:6px;border-radius:50%;background:var(--teal);display:inline-block;"></span>疼痛治療</span>
+                <span class="stat-vm" style="color:var(--teal);font-size:14px;" id="st-rev-pain">$0</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--ink3);"><span style="width:6px;height:6px;border-radius:50%;background:var(--mauve);display:inline-block;"></span>抗衰老</span>
+                <span class="stat-vm" style="color:var(--mauve);font-size:14px;" id="st-rev-aging">$0</span>
+              </div>
+              <div style="margin-top:8px;padding-top:6px;border-top:1px solid var(--border);display:flex;justify-content:space-between;">
+                <span style="font-size:10px;color:var(--ink4);">合計</span>
+                <span class="stat-vm" style="color:var(--navy);font-size:14px;" id="st-month-rev">$0</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="split-card">
+          <div class="split-title">已預約・近 30 天</div>
+          <div class="split-body">
+            <div class="split-half">
+              <div class="split-lbl"><span class="split-dot" style="background:var(--teal)"></span>疼痛治療</div>
+              <div class="split-v" style="color:var(--teal)" id="st-ap-pain">0</div>
+            </div>
+            <div class="split-sep"></div>
+            <div class="split-half right-pad">
+              <div class="split-lbl"><span class="split-dot" style="background:var(--mauve)"></span>抗衰老</div>
+              <div class="split-v" style="color:var(--mauve)" id="st-ap-aging">0</div>
+            </div>
+          </div>
+        </div>
+        <div class="split-card">
+          <div class="split-title">本月交易</div>
+          <div class="split-body">
+            <div class="split-half">
+              <div class="split-lbl"><span class="split-dot" style="background:var(--teal)"></span>疼痛治療</div>
+              <div class="split-v" style="color:var(--teal)" id="st-tx-pain">0</div>
+            </div>
+            <div class="split-sep"></div>
+            <div class="split-half right-pad">
+              <div class="split-lbl"><span class="split-dot" style="background:var(--mauve)"></span>抗衰老</div>
+              <div class="split-v" style="color:var(--mauve)" id="st-tx-aging">0</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+
+      <!-- CALENDAR + REF ROW -->
+      <div style="display:grid;grid-template-columns:1fr 260px;gap:16px;align-items:start;">
+
+        <!-- 4-WEEK CALENDAR -->
+        <div class="tcrd">
+          <div class="ttb" style="justify-content:space-between;">
+            <span style="font-family:'Cormorant Garamond',serif;font-size:15px;font-style:italic;color:var(--navy)">預約月曆・近四週</span>
+            <div style="display:flex;gap:12px;align-items:center;">
+              <span style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--ink3);">
+                <span style="width:10px;height:10px;border-radius:2px;background:rgba(55,139,167,0.18);border-left:3px solid #378ba7;display:inline-block;"></span>疼痛治療
+              </span>
+              <span style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--ink3);">
+                <span style="width:10px;height:10px;border-radius:2px;background:rgba(41,40,94,0.10);border-left:3px solid #29285e;display:inline-block;"></span>抗衰老
+              </span>
+            </div>
+          </div>
+          <!-- Day headers -->
+          <div style="display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1px solid var(--border);">
+            <div style="padding:7px 0;text-align:center;font-size:10px;letter-spacing:1px;color:var(--ink4);">一</div>
+            <div style="padding:7px 0;text-align:center;font-size:10px;letter-spacing:1px;color:var(--ink4);">二</div>
+            <div style="padding:7px 0;text-align:center;font-size:10px;letter-spacing:1px;color:var(--ink4);">三</div>
+            <div style="padding:7px 0;text-align:center;font-size:10px;letter-spacing:1px;color:var(--ink4);">四</div>
+            <div style="padding:7px 0;text-align:center;font-size:10px;letter-spacing:1px;color:var(--ink4);">五</div>
+            <div style="padding:7px 0;text-align:center;font-size:10px;letter-spacing:1px;color:var(--rose);">六</div>
+            <div style="padding:7px 0;text-align:center;font-size:10px;letter-spacing:1px;color:var(--rose);">日</div>
+          </div>
+          <!-- Calendar grid -->
+          <div id="cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);"></div>
+        </div>
+
+        <!-- REF CHART -->
+        <div class="tcrd">
+          <div class="ttb"><span style="font-family:'Cormorant Garamond',serif;font-size:15px;font-style:italic;color:var(--navy)">轉介來源分析</span></div>
+          <div style="padding:16px 18px" id="ref-chart"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- CLIENTS -->
+    <div class="view" id="view-clients">
+      <div class="tcrd">
+        <div class="ttb">
+          <input class="si" id="client-search" placeholder="搜尋姓名、代號、電話…" oninput="filterClients()">
+          <select class="fsel" id="status-filter" onchange="filterClients()">
+            <option value="">全部狀態</option><option>活躍</option><option>定期回診</option><option>待追蹤</option><option>休眠</option>
+          </select>
+        </div>
+        <div class="tscroll">
+          <table>
+            <thead><tr><th>代號</th><th>姓名</th><th>電話</th><th>轉介來源</th><th>初訪日</th><th>消費總額</th><th>狀態</th></tr></thead>
+            <tbody id="clients-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRANSACTIONS -->
+    <div class="view" id="view-transactions">
+      <div class="tcrd">
+        <div class="ttb">
+          <input class="si" id="tx-search" placeholder="搜尋交易記錄…" oninput="filterTx()">
+          <select class="fsel" id="tx-cat-f" onchange="filterTx()">
+            <option value="">全部類別</option><option>疼痛治療</option><option>抗衰老</option>
+          </select>
+        </div>
+        <div class="tscroll">
+          <table>
+            <thead><tr><th>交易序號</th><th>客戶</th><th>日期</th><th>類別</th><th>類型</th><th>項目</th><th>金額</th><th>收款</th><th class="admin-only"></th></tr></thead>
+            <tbody id="tx-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TREATMENTS -->
+    <div class="view" id="view-treatments">
+      <div class="tcrd">
+        <div class="ttb">
+          <input class="si" id="tr-search" placeholder="搜尋療程…" oninput="filterTreatments()">
+          <select class="fsel" id="tr-cat-f" onchange="filterTreatments()">
+            <option value="">全部類別</option><option>疼痛治療</option><option>抗衰老</option>
+          </select>
+          <button class="btn btn-outline btn-sm" onclick="openM('mtr')">＋ 新增療程記錄</button>
+        </div>
+        <div class="tscroll">
+          <table>
+            <thead><tr><th>記錄編號</th><th>客戶</th><th>日期</th><th>類別</th><th>療程</th><th>第N次</th><th>醫師/治療師</th><th>下次預約</th></tr></thead>
+            <tbody id="tr-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- APPOINTMENTS -->
+    <div class="view" id="view-appointments">
+      <div class="tcrd">
+        <div class="ttb">
+          <input class="si" id="ap-search" placeholder="搜尋預約…" oninput="filterAppts()">
+          <select class="fsel" id="ap-cat-f" onchange="filterAppts()">
+            <option value="">全部類別</option><option>疼痛治療</option><option>抗衰老</option>
+          </select>
+          <button class="btn btn-outline btn-sm" onclick="openM('ma')">＋ 新增預約</button>
+        </div>
+        <div class="tscroll">
+          <table>
+            <thead><tr><th>預約 ID</th><th>客戶</th><th>日期 / 時間</th><th>類別</th><th>預約項目</th><th>負責人員</th><th>狀態</th><th></th></tr></thead>
+            <tbody id="ap-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- REFERRALS -->
+    <div class="view" id="view-referrals">
+      <div class="stats-row-3">
+        <div class="stat-card"><div class="stat-lbl">老客戶推薦</div><div class="stat-v" style="color:var(--sage)" id="ref-st1">0</div><div class="stat-sub" id="ref-sub1">帶入 $0</div></div>
+        <div class="stat-card"><div class="stat-lbl">說明會 / 活動</div><div class="stat-v" style="color:var(--rose)" id="ref-st2">0</div><div class="stat-sub" id="ref-sub2">帶入 $0</div></div>
+        <div class="stat-card"><div class="stat-lbl">社群 / 廣告</div><div class="stat-v" style="color:var(--teal-b)" id="ref-st3">0</div><div class="stat-sub" id="ref-sub3">帶入 $0</div></div>
+      </div>
+      <div class="tcrd">
+        <div class="ttb"><span style="font-family:'Cormorant Garamond',serif;font-size:15px;font-style:italic;color:var(--ink2)">轉介明細</span></div>
+        <table>
+          <thead><tr><th>來源類型</th><th>推薦人 / 活動</th><th>客戶</th><th>初訪日</th><th>消費金額</th></tr></thead>
+          <tbody id="ref-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- NEW CLIENT -->
+<div class="ov" id="mc">
+  <div class="modal">
+    <div class="mhd"><div><div class="mtitle">新增客戶</div><div class="msub">建立新的客戶檔案</div></div><button class="mclose" onclick="closeM('mc')">×</button></div>
+    <div class="mbody"><div class="fg2">
+      <div class="fdiv"><span>基本資料</span></div>
+      <div class="fg"><label>姓名 *</label><input id="nc-name" placeholder="客戶姓名"></div>
+      <div class="fg"><label>性別</label><select id="nc-gender"><option value="">請選擇</option><option>女</option><option>男</option><option>不提供</option></select></div>
+      <div class="fg"><label>生日</label><input type="date" id="nc-bday"></div>
+      <div class="fg"><label>國籍</label><input id="nc-nat" placeholder="例：台灣"></div>
+      <div class="fg full"><label>Email</label><input type="email" id="nc-email" placeholder="email@example.com"></div>
+      <div class="fg"><label>手機</label><input id="nc-phone" placeholder="0912-345-678"></div>
+      <div class="fg"><label>WhatsApp / LINE</label><input id="nc-sns" placeholder="帳號或電話"></div>
+      <div class="fdiv"><span>轉介來源</span></div>
+      <div class="fg"><label>來源類型</label><select id="nc-src" onchange="toggleSrc()"><option value="">請選擇</option><option>老客戶推薦</option><option>說明會/活動</option><option>社群媒體</option><option>廣告</option><option>自然到訪</option></select></div>
+      <div class="fg" id="nc-rg"><label>推薦人代號</label><input id="nc-ref" placeholder="例：JB2511-001"></div>
+      <div class="fg" id="nc-eg"><label>說明會 / 活動名稱</label><input id="nc-evt" placeholder="活動名稱"></div>
+      <div class="fg"><label>負責諮詢師</label><input id="nc-con" placeholder="姓名"></div>
+      <div class="fdiv"><span>健康資訊</span></div>
+      <div class="fg full"><label>主要健康訴求</label><input id="nc-concern" placeholder="例：膝關節疼痛、抗老化、體態雕塑"></div>
+      <div class="fg"><label>血液檢測</label><select id="nc-bl"><option>No</option><option>Yes</option></select></div>
+      <div class="fg"><label>客戶狀態</label><select id="nc-st"><option>活躍</option><option>定期回診</option><option>待追蹤</option><option>休眠</option></select></div>
+      <div class="fg full"><label>備註</label><textarea id="nc-note" placeholder="其他備註…"></textarea></div>
+    </div></div>
+    <div class="mft"><button class="btn btn-outline" onclick="closeM('mc')">取消</button><button class="btn btn-gold" onclick="saveClient()">建立客戶檔案</button></div>
+  </div>
+</div>
+
+<!-- NEW TRANSACTION -->
+<div class="ov" id="mt">
+  <div class="modal">
+    <div class="mhd"><div><div class="mtitle">新增交易記錄</div><div class="msub">記錄消費、儲值或療程使用</div></div><button class="mclose" onclick="closeM('mt')">×</button></div>
+    <div class="mbody"><div class="fg2">
+      <div class="fg full"><label>客戶 *</label><select id="tx-c"><option value="">請選擇客戶</option></select></div>
+      <div class="fg"><label>交易日期 *</label><input type="date" id="tx-d"></div>
+      <div class="fg"><label>服務類別 *</label><select id="tx-cat"><option value="">請選擇</option><option>疼痛治療</option><option>抗衰老</option></select></div>
+      <div class="fg"><label>交易類型 *</label><select id="tx-ty"><option>儲值</option><option>扣次</option><option>單次消費</option><option>退款或作廢</option></select></div>
+      <div class="fg full"><label>交易項目</label><input id="tx-it" placeholder="例：精準Exo、PRP、物理治療…"></div>
+      <div class="fg"><label>次數</label><input type="number" id="tx-cnt" value="1"></div>
+      <div class="fg"><label>金額 (NT$)</label><input type="number" id="tx-amt" placeholder="0"></div>
+      <div class="fg"><label>收款方式</label><select id="tx-pay"><option>現金</option><option>信用卡</option><option>銀行轉帳</option><option>其他</option></select></div>
+      <div class="fg"><label>服務人員</label><input id="tx-stf" placeholder="姓名"></div>
+      <div class="fg full"><label>備註</label><textarea id="tx-note" placeholder="備註…"></textarea></div>
+    </div></div>
+    <div class="mft"><button class="btn btn-outline" onclick="closeM('mt')">取消</button><button class="btn btn-gold" onclick="saveTx()">儲存交易</button></div>
+  </div>
+</div>
+
+<!-- NEW TREATMENT -->
+<div class="ov" id="mtr">
+  <div class="modal">
+    <div class="mhd"><div><div class="mtitle">療程記錄</div><div class="msub">新增回診或療程紀錄</div></div><button class="mclose" onclick="closeM('mtr')">×</button></div>
+    <div class="mbody"><div class="fg2">
+      <div class="fg full"><label>客戶</label><select id="tr-c"><option value="">請選擇客戶</option></select></div>
+      <div class="fg"><label>服務日期</label><input type="date" id="tr-d"></div>
+      <div class="fg"><label>服務類別</label><select id="tr-cat"><option value="">請選擇</option><option>疼痛治療</option><option>抗衰老</option></select></div>
+      <div class="fg full"><label>進行療程</label><input id="tr-nm" placeholder="例：外泌體注射、PRP、物理治療…"></div>
+      <div class="fg"><label>第幾次</label><input type="number" id="tr-ses" value="1" min="1"></div>
+      <div class="fg"><label>醫師 / 治療師</label><input id="tr-dr" placeholder="姓名"></div>
+      <div class="fg full"><label>治療部位</label><input id="tr-ar" placeholder="例：膝關節、全臉…"></div>
+      <div class="fg full"><label>治療前狀況</label><textarea id="tr-bf" placeholder="記錄治療前狀況…"></textarea></div>
+      <div class="fg full"><label>治療後狀況 / 醫囑</label><textarea id="tr-af" placeholder="記錄治療後狀況…"></textarea></div>
+      <div class="fg"><label>下次預約日</label><input type="date" id="tr-nx"></div>
+      <div class="fg"><label>注意事項</label><input id="tr-nt" placeholder="回家注意事項…"></div>
+    </div></div>
+    <div class="mft"><button class="btn btn-outline" onclick="closeM('mtr')">取消</button><button class="btn btn-gold" onclick="saveTr()">儲存記錄</button></div>
+  </div>
+</div>
+
+<!-- NEW APPOINTMENT -->
+<div class="ov" id="ma">
+  <div class="modal">
+    <div class="mhd"><div><div class="mtitle">新增預約</div><div class="msub">為客戶安排療程預約</div></div><button class="mclose" onclick="closeM('ma')">×</button></div>
+    <div class="mbody"><div class="fg2">
+      <div class="fg full"><label>客戶</label><select id="ap-c"><option value="">請選擇客戶</option></select></div>
+      <div class="fg"><label>日期</label><input type="date" id="ap-d"></div>
+      <div class="fg"><label>時間</label><input type="time" id="ap-t" value="10:00"></div>
+      <div class="fg"><label>服務類別</label><select id="ap-cat"><option value="">請選擇</option><option>疼痛治療</option><option>抗衰老</option></select></div>
+      <div class="fg full"><label>預約項目</label><input id="ap-it" placeholder="例：精準Exo第2次、物理治療…"></div>
+      <div class="fg"><label>負責人員</label><input id="ap-st" placeholder="姓名"></div>
+      <div class="fg"><label>預約狀態</label><select id="ap-s"><option>已確認</option><option>待確認</option><option>已完成</option><option>爽約</option><option>已取消</option></select></div>
+      <div class="fg full"><label>備註</label><textarea id="ap-nt" placeholder="備註…"></textarea></div>
+    </div></div>
+    <div class="mft"><button class="btn btn-outline" onclick="closeM('ma')">取消</button><button class="btn btn-gold" onclick="saveAp()">儲存預約</button></div>
+  </div>
+</div>
+
+<!-- CLIENT DETAIL -->
+<div class="ov" id="mcd">
+  <div class="modal" style="width:680px">
+    <div class="mhd"><div><div class="mtitle" id="cd-title">客戶詳情</div></div><button class="mclose" onclick="closeM('mcd')">×</button></div>
+    <div class="mbody" id="cd-body"></div>
+  </div>
+</div>
+
+
+<!-- EDIT CLIENT MODAL -->
+<div class="ov" id="m-edit-client">
+  <div class="modal">
+    <div class="mhd"><div><div class="mtitle">編輯客戶資料</div></div><button class="mclose" onclick="closeM('m-edit-client')">×</button></div>
+    <div class="mbody"><div class="fg2">
+      <div class="fdiv"><span>基本資料</span></div>
+      <div class="fg"><label>姓名</label><input id="ec-name" placeholder="客戶姓名"></div>
+      <div class="fg"><label>性別</label><select id="ec-gender"><option value="">請選擇</option><option>女</option><option>男</option><option>不提供</option></select></div>
+      <div class="fg"><label>生日</label><input type="date" id="ec-bday"></div>
+      <div class="fg"><label>國籍</label><input id="ec-nat"></div>
+      <div class="fg full"><label>Email</label><input type="email" id="ec-email"></div>
+      <div class="fg"><label>手機</label><input id="ec-phone"></div>
+      <div class="fg"><label>WhatsApp / LINE</label><input id="ec-sns"></div>
+      <div class="fdiv"><span>其他</span></div>
+      <div class="fg"><label>負責諮詢師</label><input id="ec-con"></div>
+      <div class="fg"><label>健康訴求</label><input id="ec-concern"></div>
+      <div class="fg"><label>血液檢測</label><select id="ec-blood"><option>No</option><option>Yes</option></select></div>
+      <div class="fg"><label>客戶狀態</label><select id="ec-status"><option>活躍</option><option>定期回診</option><option>待追蹤</option><option>休眠</option></select></div>
+      <div class="fg full"><label>備註</label><textarea id="ec-note"></textarea></div>
+    </div></div>
+    <div class="mft"><button class="btn btn-outline" onclick="closeM('m-edit-client')">取消</button><button class="btn btn-gold" onclick="saveEditClient()">儲存修改</button></div>
+  </div>
+</div>
+
+<!-- EDIT APPOINTMENT STATUS MODAL -->
+<div class="ov" id="m-edit-appt">
+  <div class="modal" style="width:400px">
+    <div class="mhd"><div><div class="mtitle">更新預約狀態</div></div><button class="mclose" onclick="closeM('m-edit-appt')">×</button></div>
+    <div class="mbody">
+      <div class="fg2">
+        <div class="fg full"><label>客戶</label><input id="ea-client" disabled style="opacity:0.6;"></div>
+        <div class="fg full"><label>預約項目</label><input id="ea-item" disabled style="opacity:0.6;"></div>
+        <div class="fg"><label>日期 / 時間</label><input id="ea-datetime" disabled style="opacity:0.6;"></div>
+        <div class="fg"><label>預約狀態 *</label>
+          <select id="ea-status">
+            <option>已確認</option><option>待確認</option><option>已完成</option><option>爽約</option><option>已取消</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="mft"><button class="btn btn-outline" onclick="closeM('m-edit-appt')">取消</button><button class="btn btn-gold" onclick="saveEditAppt()">更新狀態</button></div>
+  </div>
+</div>
+
+<!-- EDIT TRANSACTION MODAL (admin only) -->
+<div class="ov" id="m-edit-tx">
+  <div class="modal">
+    <div class="mhd"><div><div class="mtitle">編輯交易記錄</div><div class="msub" style="color:var(--rose)">⚠ 管理員功能</div></div><button class="mclose" onclick="closeM('m-edit-tx')">×</button></div>
+    <div class="mbody"><div class="fg2">
+      <div class="fg full"><label>客戶</label><input id="etx-client" disabled style="opacity:0.6;"></div>
+      <div class="fg"><label>日期</label><input type="date" id="etx-date"></div>
+      <div class="fg"><label>服務類別</label><select id="etx-cat"><option>疼痛治療</option><option>抗衰老</option></select></div>
+      <div class="fg"><label>交易類型</label><select id="etx-type"><option>儲值</option><option>扣次</option><option>單次消費</option><option>退款或作廢</option></select></div>
+      <div class="fg full"><label>交易項目</label><input id="etx-item"></div>
+      <div class="fg"><label>次數</label><input type="number" id="etx-cnt"></div>
+      <div class="fg"><label>金額 (NT$)</label><input type="number" id="etx-amt"></div>
+      <div class="fg"><label>收款方式</label><select id="etx-pay"><option>現金</option><option>信用卡</option><option>銀行轉帳</option><option>其他</option></select></div>
+      <div class="fg"><label>服務人員</label><input id="etx-staff"></div>
+    </div></div>
+    <div class="mft"><button class="btn btn-outline" onclick="closeM('m-edit-tx')">取消</button><button class="btn btn-gold" onclick="saveEditTx()">儲存修改</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><span>✦</span><span id="t-msg"></span></div>
+
+<script>
+// ─── DATA ───
+var clients = [];
+
+var txs = [];
+
+var trs = [];
+
+var apts = [];
+
+// ─── HELPERS ───
+function fd(s) {
+  if (!s) return '—';
+  var d = new Date(s);
+  return d.getFullYear() + '/' + String(d.getMonth()+1).padStart(2,'0') + '/' + String(d.getDate()).padStart(2,'0');
+}
+function gc(id) { return clients.find(function(c){return c.id===id;}) || {name:id}; }
+function el(id) { return document.getElementById(id); }
+function money(n) { return n>0 ? '$'+n.toLocaleString() : '—'; }
+
+function sb(s) {
+  var m = {活躍:'b-sage',定期回診:'b-gold',待追蹤:'b-blush',休眠:'b-ink'};
+  return '<span class="bdg '+(m[s]||'b-ink')+'">'+(s||'—')+'</span>';
+}
+function tb(t) {
+  var m = {儲值:'b-sage',扣次:'b-gold',單次消費:'b-blush',退款或作廢:'b-rose'};
+  return '<span class="bdg '+(m[t]||'b-ink')+'">'+t+'</span>';
+}
+function ab(s) {
+  var m = {已確認:'b-sage',待確認:'b-blush',已完成:'b-gold',爽約:'b-rose',已取消:'b-ink'};
+  return '<span class="bdg '+(m[s]||'b-ink')+'">'+s+'</span>';
+}
+function srcb(s) {
+  var m = {'老客戶推薦':'b-sage','說明會/活動':'b-blush','社群媒體':'b-gold','廣告':'b-rose','自然到訪':'b-ink'};
+  return '<span class="bdg '+(m[s]||'b-ink')+'">'+(s||'—')+'</span>';
+}
+function catb(c) {
+  if (c === '疼痛治療') return '<span class="bdg b-teal">疼痛治療</span>';
+  if (c === '抗衰老') return '<span class="bdg b-mauve">抗衰老</span>';
+  return '<span class="bdg b-ink">'+(c||'—')+'</span>';
+}
+
+// ─── NAVIGATION ───
+function showView(v, elem) {
+  var views = document.querySelectorAll('.view');
+  for (var i=0; i<views.length; i++) views[i].classList.remove('active');
+  var nis = document.querySelectorAll('.ni');
+  for (var i=0; i<nis.length; i++) nis[i].classList.remove('active');
+  el('view-'+v).classList.add('active');
+  elem.classList.add('active');
+  var titles = {dashboard:'概覽',clients:'客戶管理',transactions:'交易記錄',treatments:'療程記錄',appointments:'預約管理',referrals:'轉介來源分析'};
+  el('page-title').textContent = titles[v] || v;
+  if (v==='dashboard') renderDash();
+  else if (v==='clients') renderClients('','');
+  else if (v==='transactions') renderTx('','');
+  else if (v==='treatments') renderTreatments('','');
+  else if (v==='appointments') renderAppts('','');
+  else if (v==='referrals') renderRefs();
+}
+
+// ─── CALENDAR ───
+function renderCal() {
+  var grid = el('cal-grid');
+  if (!grid) return;
+  var today = new Date();
+  today.setHours(0,0,0,0);
+
+  // Start from Monday of current week
+  var startDay = new Date(today);
+  var dow = startDay.getDay(); // 0=Sun
+  var diffToMon = dow === 0 ? -6 : 1 - dow;
+  startDay.setDate(startDay.getDate() + diffToMon);
+
+  // 4 weeks = 28 days
+  var cells = '';
+  for (var i = 0; i < 28; i++) {
+    var d = new Date(startDay);
+    d.setDate(startDay.getDate() + i);
+    d.setHours(0,0,0,0);
+
+    var dayStr = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    var isToday = d.getTime() === today.getTime();
+    var isPast = d < today;
+    var dayOfWeek = d.getDay(); // 0=Sun,6=Sat
+    var isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+
+    var numClass = 'cal-num';
+    if (isToday) numClass += ' today';
+    else if (isPast) numClass += ' past';
+    if (isWeekend && !isToday) numClass += ' weekend';
+
+    // Find appointments for this day
+    var dayApts = [];
+    for (var j = 0; j < apts.length; j++) {
+      if (apts[j].date === dayStr) dayApts.push(apts[j]);
+    }
+
+    var evtHtml = '';
+    for (var j = 0; j < dayApts.length; j++) {
+      var a = dayApts[j];
+      var cls = a.cat === '疼痛治療' ? 'pain' : 'aging';
+      var cname = gc(a.cid).name || '';
+      evtHtml += '<div class="cal-evt ' + cls + '" title="' + cname + ' ' + a.time + ' ' + (a.item||'') + '">' + a.time.slice(0,5) + ' ' + cname + '</div>';
+    }
+
+    cells += '<div class="cal-cell">';
+    cells += '<div class="' + numClass + '">' + d.getDate() + '</div>';
+    cells += evtHtml;
+    cells += '</div>';
+  }
+  grid.innerHTML = cells;
+}
+
+// ─── DASHBOARD ───
+function renderDash() {
+  var tot = 0;
+  for (var i=0; i<clients.length; i++) tot += clients[i].spend;
+  el('st-clients').textContent = clients.length;
+  el('st-rev').textContent = '$'+tot.toLocaleString();
+  el('client-count').textContent = clients.length;
+
+  var now = new Date();
+  var in30 = new Date(now.getTime() + 30*86400000);
+  var thisM = now.getMonth(), thisY = now.getFullYear();
+
+  var apPain=0, apAging=0, txPain=0, txAging=0;
+  var revPain=0, revAging=0, totalPain=0, totalAging=0;
+  for (var i=0; i<apts.length; i++) {
+    var d = new Date(apts[i].date);
+    if (d >= now && d <= in30) {
+      if (apts[i].cat === '疼痛治療') apPain++;
+      else if (apts[i].cat === '抗衰老') apAging++;
+    }
+  }
+  for (var i=0; i<txs.length; i++) {
+    var d = new Date(txs[i].date);
+    var amt = txs[i].amt || 0;
+    // 累計
+    if (txs[i].cat === '疼痛治療') totalPain += amt;
+    else if (txs[i].cat === '抗衰老') totalAging += amt;
+    // 本月
+    if (d.getMonth()===thisM && d.getFullYear()===thisY) {
+      if (txs[i].cat === '疼痛治療') { txPain++; revPain += amt; }
+      else if (txs[i].cat === '抗衰老') { txAging++; revAging += amt; }
+    }
+  }
+  el('st-ap-pain').textContent = apPain;
+  el('st-ap-aging').textContent = apAging;
+  el('st-tx-pain').textContent = txPain;
+  el('st-tx-aging').textContent = txAging;
+  var e; 
+  e=el('st-total-pain'); if(e) e.textContent='$'+totalPain.toLocaleString();
+  e=el('st-total-aging'); if(e) e.textContent='$'+totalAging.toLocaleString();
+  e=el('st-rev'); if(e) e.textContent='$'+(totalPain+totalAging).toLocaleString();
+  e=el('st-rev-pain'); if(e) e.textContent='$'+revPain.toLocaleString();
+  e=el('st-rev-aging'); if(e) e.textContent='$'+revAging.toLocaleString();
+  e=el('st-month-rev'); if(e) e.textContent='$'+(revPain+revAging).toLocaleString();
+
+
+
+
+  var sm = {};
+  for (var i=0; i<clients.length; i++) {
+    var s = clients[i].src;
+    if (s) sm[s] = (sm[s]||0)+1;
+  }
+  var keys = Object.keys(sm);
+  var mx = 1;
+  for (var i=0; i<keys.length; i++) if (sm[keys[i]]>mx) mx=sm[keys[i]];
+  var fc = {'老客戶推薦':'#378ba7','說明會/活動':'#29285e','社群媒體':'#6b9fc4','廣告':'#8ca8c0','自然到訪':'#a0b8cc'};
+  var rcHtml = '';
+  for (var i=0; i<keys.length; i++) {
+    var k=keys[i], v=sm[k];
+    rcHtml += '<div class="rc-row"><div class="rc-hd"><span class="rc-lbl">'+k+'</span><span class="rc-val">'+v+' 位</span></div><div class="rc-track"><div class="rc-fill" style="width:'+Math.round(v/mx*100)+'%;background:'+(fc[k]||'#B8965A')+'"></div></div></div>';
+  }
+  el('ref-chart').innerHTML = rcHtml;
+  renderCal();
+}
+
+// ─── CLIENTS ───
+function renderClients(f, sf) {
+  var html = '';
+  var shown = 0;
+  for (var i=0; i<clients.length; i++) {
+    var c = clients[i];
+    var q = (f||'').toLowerCase();
+    var matchQ = !q || c.id.toLowerCase().indexOf(q)>=0 || c.name.toLowerCase().indexOf(q)>=0 || (c.phone||'').indexOf(q)>=0;
+    var matchS = !sf || c.status===sf;
+    if (!matchQ || !matchS) continue;
+    shown++;
+    html += '<tr onclick="openDetail(\''+c.id+'\')"><td><span class="cc">'+c.id+'</span></td><td><span class="cp">'+c.name+'</span></td><td style="color:var(--ink3)">'+(c.phone||'—')+'</td><td>'+srcb(c.src)+'</td><td style="color:var(--ink3)">'+fd(c.firstVisit)+'</td><td><span class="cm" style="color:var(--teal-b)">'+money(c.spend)+'</span></td><td>'+sb(c.status)+'</td></tr>';
+  }
+  if (!shown) html = '<tr><td colspan="7"><div class="empty-s"><div class="ei">◎</div><div class="et">找不到符合條件的客戶</div></div></td></tr>';
+  el('clients-tbody').innerHTML = html;
+}
+function filterClients() { renderClients(el('client-search').value, el('status-filter').value); }
+
+// ─── TRANSACTIONS ───
+function renderTx(f, cf) {
+  var html = '';
+  var shown = 0;
+  for (var i=0; i<txs.length; i++) {
+    var t = txs[i];
+    var q = (f||'').toLowerCase();
+    var cname = gc(t.cid).name || '';
+    var matchQ = !q || t.id.toLowerCase().indexOf(q)>=0 || cname.toLowerCase().indexOf(q)>=0;
+    var matchC = !cf || t.cat===cf;
+    if (!matchQ || !matchC) continue;
+    shown++;
+    var amtStyle = t.amt>0 ? 'color:var(--sage)' : 'color:var(--ink4)';
+    html += '<tr><td><span class="cc">'+t.id+'</span></td><td><span class="cp">'+cname+'</span></td><td style="color:var(--ink3)">'+fd(t.date)+'</td><td>'+catb(t.cat)+'</td><td>'+tb(t.type)+'</td><td style="color:var(--ink2)">'+(t.item||'—')+'</td><td><span class="cm" style="'+amtStyle+'">'+(t.amt>0?'$'+t.amt.toLocaleString():'—')+'</span></td><td style="color:var(--ink3)">'+t.pay+'</td><td class="admin-only"><button class="btn btn-outline btn-sm" onclick="openEditTx(\''+t.id+'\')" style="font-size:10px;padding:3px 8px;">編輯</button></td></tr>';
+  }
+  if (!shown) html = '<tr><td colspan="8"><div class="empty-s"><div class="ei">◇</div><div class="et">暫無交易記錄</div></div></td></tr>';
+  el('tx-tbody').innerHTML = html;
+}
+function filterTx() { renderTx(el('tx-search').value, el('tx-cat-f').value); }
+
+// ─── TREATMENTS ───
+function renderTreatments(f, cf) {
+  var html = '';
+  var shown = 0;
+  for (var i=0; i<trs.length; i++) {
+    var t = trs[i];
+    var q = (f||'').toLowerCase();
+    var cname = gc(t.cid).name || '';
+    var matchQ = !q || cname.toLowerCase().indexOf(q)>=0 || t.name.toLowerCase().indexOf(q)>=0;
+    var matchC = !cf || t.cat===cf;
+    if (!matchQ || !matchC) continue;
+    shown++;
+    var nextColor = t.next ? 'color:var(--rose)' : 'color:var(--ink4)';
+    html += '<tr><td><span class="cc">'+t.id+'</span></td><td><span class="cp">'+cname+'</span></td><td style="color:var(--ink3)">'+fd(t.date)+'</td><td>'+catb(t.cat)+'</td><td style="color:var(--ink2)">'+t.name+'</td><td><span class="cm">第 '+t.ses+' 次</span></td><td style="color:var(--ink2)">'+(t.doc||'—')+'</td><td style="'+nextColor+'">'+(t.next?fd(t.next):'—')+'</td></tr>';
+  }
+  if (!shown) html = '<tr><td colspan="8"><div class="empty-s"><div class="ei">✦</div><div class="et">暫無療程記錄</div></div></td></tr>';
+  el('tr-tbody').innerHTML = html;
+}
+function filterTreatments() { renderTreatments(el('tr-search').value, el('tr-cat-f').value); }
+
+// ─── APPOINTMENTS ───
+function renderAppts(f, cf) {
+  var html = '';
+  var shown = 0;
+  for (var i=0; i<apts.length; i++) {
+    var a = apts[i];
+    var q = (f||'').toLowerCase();
+    var cname = gc(a.cid).name || '';
+    var matchQ = !q || cname.toLowerCase().indexOf(q)>=0 || (a.item||'').toLowerCase().indexOf(q)>=0;
+    var matchC = !cf || a.cat===cf;
+    if (!matchQ || !matchC) continue;
+    shown++;
+    html += '<tr><td><span class="cc">'+a.id+'</span></td><td><span class="cp">'+cname+'</span></td><td>'+fd(a.date)+' <span class="cm" style="color:var(--teal-b)">'+a.time+'</span></td><td>'+catb(a.cat)+'</td><td style="color:var(--ink2)">'+(a.item||'—')+'</td><td style="color:var(--ink3)">'+(a.staff||'—')+'</td><td>'+ab(a.status)+'</td><td><button class="btn btn-outline btn-sm" onclick="openEditAppt(\''+a.id+'\')" style="font-size:10px;padding:3px 8px;">更新狀態</button></td></tr>';
+  }
+  if (!shown) html = '<tr><td colspan="7"><div class="empty-s"><div class="ei">◻</div><div class="et">暫無預約記錄</div></div></td></tr>';
+  el('ap-tbody').innerHTML = html;
+}
+function filterAppts() { renderAppts(el('ap-search').value, el('ap-cat-f').value); }
+
+// ─── REFERRALS ───
+function renderRefs() {
+  var groups = {'老客戶推薦':[],'說明會/活動':[],'社群媒體':[],'廣告':[],'自然到訪':[]};
+  for (var i=0; i<clients.length; i++) {
+    var c = clients[i];
+    if (groups[c.src]) groups[c.src].push(c);
+  }
+  var r1 = groups['老客戶推薦'];
+  var r2 = groups['說明會/活動'];
+  var r3 = (groups['社群媒體']||[]).concat(groups['廣告']||[]).concat(groups['自然到訪']||[]);
+  function sumSpend(arr) { var s=0; for(var i=0;i<arr.length;i++) s+=arr[i].spend; return s; }
+  el('ref-st1').textContent = r1.length;
+  el('ref-sub1').textContent = '帶入 $'+sumSpend(r1).toLocaleString();
+  el('ref-st2').textContent = r2.length;
+  el('ref-sub2').textContent = '帶入 $'+sumSpend(r2).toLocaleString();
+  el('ref-st3').textContent = r3.length;
+  el('ref-sub3').textContent = '帶入 $'+sumSpend(r3).toLocaleString();
+  var html = '';
+  for (var i=0; i<clients.length; i++) {
+    var c = clients[i];
+    var refStr = c.ref ? '<span class="cc">'+c.ref+'</span>' : (c.evt||'—');
+    html += '<tr><td>'+srcb(c.src)+'</td><td style="color:var(--ink2)">'+refStr+'</td><td><span class="cp">'+c.name+'</span> <span class="cc" style="font-size:10px">'+c.id+'</span></td><td style="color:var(--ink3)">'+fd(c.firstVisit)+'</td><td><span class="cm" style="color:var(--teal-b)">'+money(c.spend)+'</span></td></tr>';
+  }
+  el('ref-tbody').innerHTML = html;
+}
+
+// ─── CLIENT DETAIL ───
+function openDetail(id) {
+  var c = null;
+  for (var i=0; i<clients.length; i++) if (clients[i].id===id) { c=clients[i]; break; }
+  if (!c) return;
+
+  var ctxs=[], ctrs=[], caps=[];
+  for (var i=0; i<txs.length; i++) if (txs[i].cid===id) ctxs.push(txs[i]);
+  for (var i=0; i<trs.length; i++) if (trs[i].cid===id) ctrs.push(trs[i]);
+  for (var i=0; i<apts.length; i++) if (apts[i].cid===id) caps.push(apts[i]);
+
+  el('cd-title').textContent = c.name;
+
+  var inf = [['生日',c.bday||'—'],['性別',c.gender||'—'],['國籍',c.nat||'—'],['Email',c.email||'—'],['手機',c.phone||'—'],['WhatsApp/LINE',c.sns||'—'],['初訪日',fd(c.firstVisit)],['負責諮詢師',c.con||'—'],['轉介類型',c.src||'—'],['推薦人代號',c.ref||'—'],['說明會/活動',c.evt||'—'],['健康訴求',c.concern||'—'],['血液檢測',c.blood||'—'],['備註',c.note||'—']];
+  var infoHtml = '';
+  for (var i=0; i<inf.length; i++) infoHtml += '<div class="irow"><div class="ilbl">'+inf[i][0]+'</div><div class="ival">'+inf[i][1]+'</div></div>';
+
+  var txDotC = {儲值:'#7A9E8A',扣次:'#B8965A',單次消費:'#C4836A'};
+  var txH = '';
+  if (ctxs.length) {
+    for (var i=0; i<ctxs.length; i++) {
+      var t=ctxs[i];
+      txH += '<div class="arow"><div class="adot" style="background:'+(txDotC[t.type]||'#B8965A')+'"></div><div class="acnt"><div class="atitle">'+( t.item||t.type)+' '+tb(t.type)+' '+catb(t.cat)+'</div><div class="asub">'+fd(t.date)+' · '+t.pay+'</div></div><span class="aamt">'+(t.amt>0?money(t.amt):t.cnt+'次')+'</span></div>';
+    }
+  } else txH = '<div class="empty-s"><div class="ei">◇</div><div class="et">暫無交易記錄</div></div>';
+
+  var trH = '';
+  if (ctrs.length) {
+    for (var i=0; i<ctrs.length; i++) {
+      var t=ctrs[i];
+      var dotC = t.cat==='疼痛治療' ? 'var(--teal)' : 'var(--mauve)';
+      trH += '<div class="arow"><div class="adot" style="background:'+dotC+'"></div><div class="acnt"><div class="atitle">'+t.name+' <span style="font-size:11px;color:var(--ink4)">第 '+t.ses+' 次</span> '+catb(t.cat)+'</div><div class="asub">'+fd(t.date)+' · '+(t.doc||'未指定')+' · '+(t.area||'')+'</div>'+(t.after?'<div style="font-size:11px;color:var(--ink3);margin-top:2px">'+t.after+'</div>':'')+'</div>'+(t.next?'<span style="font-size:11px;color:var(--rose);white-space:nowrap">次 '+fd(t.next)+'</span>':'')+'</div>';
+    }
+  } else trH = '<div class="empty-s"><div class="ei">✦</div><div class="et">暫無療程記錄</div></div>';
+
+  var apH = '';
+  if (caps.length) {
+    for (var i=0; i<caps.length; i++) {
+      var a=caps[i];
+      var dotC = a.cat==='疼痛治療' ? 'var(--teal)' : 'var(--mauve)';
+      apH += '<div class="arow"><div class="adot" style="background:'+dotC+'"></div><div class="acnt"><div class="atitle">'+(a.item||'預約')+' '+catb(a.cat)+'</div><div class="asub">'+fd(a.date)+' '+a.time+' · '+(a.staff||'未指定')+'</div></div>'+ab(a.status)+'</div>';
+    }
+  } else apH = '<div class="empty-s"><div class="ei">◻</div><div class="et">暫無預約</div></div>';
+
+  el('cd-body').innerHTML =
+    '<div class="dhero"><div class="hav">'+c.name[0]+'</div><div class="hname">'+c.name+'</div><div class="hmeta"><span class="hcode">'+c.id+'</span>'+sb(c.status)+srcb(c.src)+'</div><div class="hspend"><div class="hslbl">累計消費</div><div class="hsval">'+money(c.spend)+'</div></div><button class="btn btn-outline btn-sm" onclick="openEditClient(\''+c.id+'\')" style="position:absolute;bottom:16px;left:22px;font-size:10px;border-color:rgba(255,255,255,0.2);color:rgba(255,255,255,0.6);">✎ 編輯資料</button></div>' +
+    '<div class="dtabs"><div class="dtab active" onclick="swTab(this,\'di\')">基本資料</div><div class="dtab" onclick="swTab(this,\'dtt\')">交易 ('+ctxs.length+')</div><div class="dtab" onclick="swTab(this,\'dtr\')">療程 ('+ctrs.length+')</div><div class="dtab" onclick="swTab(this,\'dap\')">預約 ('+caps.length+')</div></div>' +
+    '<div class="dtc active" id="di"><div class="igrid">'+infoHtml+'</div></div>' +
+    '<div class="dtc" id="dtt">'+txH+'</div>' +
+    '<div class="dtc" id="dtr">'+trH+'</div>' +
+    '<div class="dtc" id="dap">'+apH+'</div>';
+
+  openM('mcd');
+}
+
+function swTab(elem, id) {
+  var mb = elem.closest('.mbody');
+  var tabs = mb.querySelectorAll('.dtab');
+  var contents = mb.querySelectorAll('.dtc');
+  for (var i=0; i<tabs.length; i++) tabs[i].classList.remove('active');
+  for (var i=0; i<contents.length; i++) contents[i].classList.remove('active');
+  elem.classList.add('active');
+  document.getElementById(id).classList.add('active');
+}
+
+// ─── MODALS ───
+function openM(id) {
+  el(id).classList.add('open');
+  if (id==='mt' || id==='mtr' || id==='ma') fillSels();
+}
+function closeM(id) { el(id).classList.remove('open'); }
+
+var overlays = document.querySelectorAll('.ov');
+for (var i=0; i<overlays.length; i++) {
+  overlays[i].addEventListener('click', function(e) {
+    if (e.target === this) this.classList.remove('open');
+  });
+}
+
+function fillSels() {
+  var sids = ['tx-c','tr-c','ap-c'];
+  for (var j=0; j<sids.length; j++) {
+    var s = el(sids[j]);
+    if (!s) continue;
+    var cur = s.value;
+    var html = '<option value="">請選擇客戶</option>';
+    for (var i=0; i<clients.length; i++) html += '<option value="'+clients[i].id+'">'+clients[i].name+'（'+clients[i].id+'）</option>';
+    s.innerHTML = html;
+    if (cur) s.value = cur;
+  }
+}
+
+function toggleSrc() {
+  var v = el('nc-src').value;
+  el('nc-rg').style.opacity = v==='老客戶推薦' ? 1 : 0.35;
+  el('nc-eg').style.opacity = v==='說明會/活動' ? 1 : 0.35;
+}
+
+// ─── ID GENERATOR ───
+function mkId(pfx, arr) {
+  var n = new Date();
+  var ym = String(n.getFullYear()).slice(2) + String(n.getMonth()+1).padStart(2,'0');
+  var p = pfx+ym+'-';
+  var cnt = 0;
+  for (var i=0; i<arr.length; i++) if (arr[i].id.indexOf(p)===0) cnt++;
+  var pad = pfx==='TR' ? 4 : 3;
+  return p+String(cnt+1).padStart(pad,'0');
+}
+
+// ─── SAVE ───
+function saveClient() {
+  var name = el('nc-name').value.trim();
+  if (!name) { toast('請輸入客戶姓名'); return; }
+  var id = mkId('JB',clients);
+  clients.push({id:id,name:name,gender:el('nc-gender').value,email:el('nc-email').value,phone:el('nc-phone').value,sns:el('nc-sns').value,nat:el('nc-nat').value,bday:el('nc-bday').value,firstVisit:new Date().toISOString().slice(0,10),src:el('nc-src').value,ref:el('nc-ref').value,evt:el('nc-evt').value,con:el('nc-con').value,concern:el('nc-concern').value,blood:el('nc-bl').value,status:el('nc-st').value,note:el('nc-note').value,spend:0});
+  el('client-count').textContent = clients.length;
+  closeM('mc');
+  toast('已建立：'+name+'（'+id+'）');
+  renderDash();
+  // 寫入 Google Sheets
+  var newC = clients[clients.length-1];
+  saveToSheets('客戶主檔', {
+    '客戶代號':newC.id,'姓名':newC.name,'性別':newC.gender,'生日':newC.bday,
+    '國籍':newC.nat,'Email':newC.email,'手機':newC.phone,'WhatsApp/LINE':newC.sns,
+    '來源類型':newC.src,'推薦人代號':newC.ref,'說明會活動':newC.evt,
+    '負責諮詢師':newC.con,'健康訴求':newC.concern,'血液檢測':newC.blood,
+    '客戶狀態':newC.status,'備註':newC.note,'消費總額':0,'建立日期':newC.firstVisit
+  }, function(ok){ if(ok) showBanner('✓ 客戶資料已同步至 Google Sheets', 'ok'); });
+}
+
+function saveTx() {
+  var cid = el('tx-c').value;
+  if (!cid) { toast('請選擇客戶'); return; }
+  var amt = parseFloat(el('tx-amt').value)||0;
+  var id = mkId('TR',txs);
+  txs.unshift({id:id,cid:cid,date:el('tx-d').value,cat:el('tx-cat').value,type:el('tx-ty').value,item:el('tx-it').value,cnt:parseFloat(el('tx-cnt').value)||1,amt:amt,pay:el('tx-pay').value,staff:el('tx-stf').value});
+  if (amt>0) { for (var i=0;i<clients.length;i++) if (clients[i].id===cid) { clients[i].spend=(clients[i].spend||0)+amt; break; } }
+  closeM('mt');
+  toast('交易記錄已新增');
+  renderTx('','');
+  renderDash();
+  // 寫入 Google Sheets
+  var t = txs[0];
+  saveToSheets('交易記錄', {
+    '交易序號':t.id,'客戶代號':t.cid,'日期':t.date,'服務類別':t.cat,
+    '交易類型':t.type,'交易項目':t.item,'次數':t.cnt,'金額':t.amt,
+    '收款方式':t.pay,'服務人員':t.staff,'備註':''
+  }, function(ok){
+    if(ok && amt>0) {
+      // 同時更新客戶消費總額
+      if(isOnline) {
+        fetch(SCRIPT_URL, {
+          method:'POST', headers:{'Content-Type':'text/plain'},
+          body: JSON.stringify({action:'updateSpend', clientId:cid, amount:amt})
+        });
+      }
+      showBanner('✓ 交易記錄已同步至 Google Sheets', 'ok');
+    }
+  });
+}
+
+function saveTr() {
+  var cid = el('tr-c').value;
+  if (!cid) { toast('請選擇客戶'); return; }
+  var n=new Date(), ym=String(n.getFullYear()).slice(2)+String(n.getMonth()+1).padStart(2,'0');
+  var p='TM'+ym+'-', cnt=0;
+  for (var i=0;i<trs.length;i++) if (trs[i].id.indexOf(p)===0) cnt++;
+  var id=p+String(cnt+1).padStart(4,'0');
+  trs.unshift({id:id,cid:cid,date:el('tr-d').value,cat:el('tr-cat').value,name:el('tr-nm').value,ses:parseInt(el('tr-ses').value)||1,doc:el('tr-dr').value,area:el('tr-ar').value,before:el('tr-bf').value,after:el('tr-af').value,next:el('tr-nx').value,note:el('tr-nt').value});
+  closeM('mtr');
+  toast('療程記錄已儲存');
+  renderTreatments('','');
+  // 寫入 Google Sheets
+  var t = trs[0];
+  saveToSheets('療程記錄', {
+    '記錄編號':t.id,'客戶代號':t.cid,'日期':t.date,'服務類別':t.cat,
+    '療程名稱':t.name,'第幾次':t.ses,'醫師治療師':t.doc,'治療部位':t.area,
+    '治療前狀況':t.before,'治療後狀況':t.after,'下次預約日':t.next,'注意事項':t.note
+  }, function(ok){ if(ok) showBanner('✓ 療程記錄已同步至 Google Sheets', 'ok'); });
+}
+
+function saveAp() {
+  var cid = el('ap-c').value;
+  if (!cid) { toast('請選擇客戶'); return; }
+  var n=new Date(), ym=String(n.getFullYear()).slice(2)+String(n.getMonth()+1).padStart(2,'0');
+  var p='AP'+ym+'-', cnt=0;
+  for (var i=0;i<apts.length;i++) if (apts[i].id.indexOf(p)===0) cnt++;
+  var id=p+String(cnt+1).padStart(4,'0');
+  apts.unshift({id:id,cid:cid,date:el('ap-d').value,time:el('ap-t').value,cat:el('ap-cat').value,item:el('ap-it').value,staff:el('ap-st').value,status:el('ap-s').value});
+  closeM('ma');
+  toast('預約已建立');
+  renderAppts('','');
+  renderDash();
+  renderCal();
+  // 寫入 Google Sheets
+  var a = apts[0];
+  saveToSheets('預約管理', {
+    '預約ID':a.id,'客戶代號':a.cid,'日期':a.date,'時間':a.time,
+    '服務類別':a.cat,'預約項目':a.item,'負責人員':a.staff,'預約狀態':a.status,'備註':''
+  }, function(ok){ if(ok) showBanner('✓ 預約已同步至 Google Sheets', 'ok'); });
+}
+
+function toast(msg) {
+  var e = el('toast');
+  el('t-msg').textContent = msg;
+  e.classList.add('show');
+  setTimeout(function(){ e.classList.remove('show'); }, 3000);
+}
+
+
+// ══════════════════════════════════════════════════
+//  GOOGLE SHEETS API LAYER
+//  把下面的 SCRIPT_URL 換成你的 Apps Script Web App 網址
+// ══════════════════════════════════════════════════
+var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzPOlToZzMU6uWWhD-XuqfNy7PIIgdYSdP2zaG3xKZln8_Q-yrVEUeE-l3Zz_h3VNwGPQ/exec';
+
+var isOnline = SCRIPT_URL !== 'YOUR_APPS_SCRIPT_URL_HERE';
+
+// ── 載入資料（開啟時從 Sheets 讀取）──
+function loadFromSheets() {
+  if (!isOnline) { showBanner('⚠️ 離線模式：使用示範資料，尚未連接 Google Sheets', 'warn'); return; }
+  showBanner('正在從 Google Sheets 載入資料...', 'info');
+  fetch(SCRIPT_URL + '?action=getAll', { method: 'GET' })
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      if (!res.success) throw new Error(res.error);
+      var d = res.data;
+      if (d['客戶主檔'] && d['客戶主檔'].length > 0) {
+        clients = d['客戶主檔'].map(function(r){ return {
+          id: r['客戶代號'], name: r['姓名'], gender: r['性別'],
+          bday: r['生日'], nat: r['國籍'], email: r['Email'],
+          phone: r['手機'], sns: r['WhatsApp/LINE'],
+          src: r['來源類型'], ref: r['推薦人代號'], evt: r['說明會活動'],
+          con: r['負責諮詢師'], concern: r['健康訴求'], blood: r['血液檢測'],
+          status: r['客戶狀態'], note: r['備註'],
+          spend: parseFloat(r['消費總額'])||0,
+          firstVisit: r['建立日期']
+        };});
+      }
+      if (d['交易記錄'] && d['交易記錄'].length > 0) {
+        txs = d['交易記錄'].map(function(r){ return {
+          id: r['交易序號'], cid: r['客戶代號'], date: r['日期'],
+          cat: r['服務類別'], type: r['交易類型'], item: r['交易項目'],
+          cnt: parseFloat(r['次數'])||1, amt: parseFloat(r['金額'])||0,
+          pay: r['收款方式'], staff: r['服務人員']
+        };});
+      }
+      if (d['療程記錄'] && d['療程記錄'].length > 0) {
+        trs = d['療程記錄'].map(function(r){ return {
+          id: r['記錄編號'], cid: r['客戶代號'], date: r['日期'],
+          cat: r['服務類別'], name: r['療程名稱'],
+          ses: parseInt(r['第幾次'])||1, doc: r['醫師治療師'],
+          area: r['治療部位'], before: r['治療前狀況'],
+          after: r['治療後狀況'], next: r['下次預約日'], note: r['注意事項']
+        };});
+      }
+      if (d['預約管理'] && d['預約管理'].length > 0) {
+        apts = d['預約管理'].map(function(r){ return {
+          id: r['預約ID'], cid: r['客戶代號'], date: r['日期'],
+          time: r['時間'], cat: r['服務類別'], item: r['預約項目'],
+          staff: r['負責人員'], status: r['預約狀態']
+        };});
+      }
+      el('client-count').textContent = clients.length;
+      renderDash();
+      showBanner('✓ 資料載入完成（' + clients.length + ' 位客戶）', 'ok');
+    })
+    .catch(function(err){
+      showBanner('⚠️ 載入失敗：' + err.message, 'error');
+    });
+}
+
+// ── 寫入一筆資料到 Sheets ──
+function saveToSheets(sheet, data, callback) {
+  if (!isOnline) { if(callback) callback(true); return; }
+  fetch(SCRIPT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify({ action: 'insert', sheet: sheet, data: data })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(res){
+    if (!res.success) throw new Error(res.error);
+    if(callback) callback(true);
+  })
+  .catch(function(err){
+    showBanner('⚠️ 同步失敗：' + err.message, 'error');
+    if(callback) callback(false);
+  });
+}
+
+// ── 狀態提示橫幅 ──
+function showBanner(msg, type) {
+  var b = el('sync-banner');
+  if (!b) return;
+  var colors = { ok:'#2e8b7a', info:'#378ba7', warn:'#b07d2a', error:'#c0624a' };
+  b.textContent = msg;
+  b.style.background = colors[type] || colors.info;
+  b.style.display = 'block';
+  b.style.opacity = '1';
+  if (type === 'ok') {
+    setTimeout(function(){ b.style.opacity='0'; setTimeout(function(){ b.style.display='none'; }, 400); }, 3000);
+  }
+}
+
+
+// ══════════════════════════════════════════════
+//  PASSWORDS — 修改這裡設定你的密碼
+// ══════════════════════════════════════════════
+var PASSWORDS = {
+  staff: 'exolifejb',      // 員工密碼
+  admin: 'exolife@Admin'     // 管理員密碼（請改成你自己的）
+};
+
+var currentRole = 'staff';  // 當前登入角色
+var editingClientId = null;
+var editingApptId = null;
+var editingTxId = null;
+
+// ── 選擇角色 ──
+function selectRole(role) {
+  currentRole = role;
+  document.getElementById('role-staff').classList.toggle('active', role==='staff');
+  document.getElementById('role-admin').classList.toggle('active', role==='admin');
+}
+
+// ── 登入 ──
+function doLogin() {
+  var pw = document.getElementById('login-pw').value;
+  var errEl = document.getElementById('login-error');
+  if (pw === PASSWORDS.admin) {
+    document.body.classList.add('is-admin');
+    document.getElementById('login-screen').style.display = 'none';
+    loadFromSheets();
+  } else if (pw === PASSWORDS.staff) {
+    document.body.classList.remove('is-admin');
+    document.getElementById('login-screen').style.display = 'none';
+    loadFromSheets();
+  } else {
+    errEl.textContent = '密碼錯誤，請再試一次';
+    document.getElementById('login-pw').value = '';
+  }
+}
+
+// ── 編輯客戶 ──
+function openEditClient(id) {
+  var c = null;
+  for (var i=0; i<clients.length; i++) if (clients[i].id===id) { c=clients[i]; break; }
+  if (!c) return;
+  editingClientId = id;
+  el('ec-name').value = c.name||'';
+  el('ec-gender').value = c.gender||'';
+  el('ec-bday').value = c.bday||'';
+  el('ec-nat').value = c.nat||'';
+  el('ec-email').value = c.email||'';
+  el('ec-phone').value = c.phone||'';
+  el('ec-sns').value = c.sns||'';
+  el('ec-con').value = c.con||'';
+  el('ec-concern').value = c.concern||'';
+  el('ec-blood').value = c.blood||'No';
+  el('ec-status').value = c.status||'活躍';
+  el('ec-note').value = c.note||'';
+  openM('m-edit-client');
+}
+
+function saveEditClient() {
+  var c = null;
+  for (var i=0; i<clients.length; i++) if (clients[i].id===editingClientId) { c=clients[i]; break; }
+  if (!c) return;
+  c.name = el('ec-name').value;
+  c.gender = el('ec-gender').value;
+  c.bday = el('ec-bday').value;
+  c.nat = el('ec-nat').value;
+  c.email = el('ec-email').value;
+  c.phone = el('ec-phone').value;
+  c.sns = el('ec-sns').value;
+  c.con = el('ec-con').value;
+  c.concern = el('ec-concern').value;
+  c.blood = el('ec-blood').value;
+  c.status = el('ec-status').value;
+  c.note = el('ec-note').value;
+  closeM('m-edit-client');
+  toast('客戶資料已更新');
+  renderClients('','');
+  // 同步到 Sheets
+  if (isOnline) {
+    fetch(SCRIPT_URL, {
+      method:'POST', headers:{'Content-Type':'text/plain'},
+      body: JSON.stringify({
+        action:'update', sheet:'客戶主檔', id:editingClientId, idField:'客戶代號',
+        data:{'客戶代號':c.id,'姓名':c.name,'性別':c.gender,'生日':c.bday,'國籍':c.nat,'Email':c.email,'手機':c.phone,'WhatsApp/LINE':c.sns,'來源類型':c.src,'推薦人代號':c.ref,'說明會活動':c.evt,'負責諮詢師':c.con,'健康訴求':c.concern,'血液檢測':c.blood,'客戶狀態':c.status,'備註':c.note,'消費總額':c.spend,'建立日期':c.firstVisit}
+      })
+    }).then(function(){ showBanner('✓ 客戶資料已同步', 'ok'); });
+  }
+}
+
+// ── 編輯預約狀態 ──
+function openEditAppt(id) {
+  var a = null;
+  for (var i=0; i<apts.length; i++) if (apts[i].id===id) { a=apts[i]; break; }
+  if (!a) return;
+  editingApptId = id;
+  var cname = gc(a.cid).name || a.cid;
+  el('ea-client').value = cname + '（' + a.cid + '）';
+  el('ea-item').value = a.item||'';
+  el('ea-datetime').value = fd(a.date) + ' ' + a.time;
+  el('ea-status').value = a.status||'已確認';
+  openM('m-edit-appt');
+}
+
+function saveEditAppt() {
+  var a = null;
+  for (var i=0; i<apts.length; i++) if (apts[i].id===editingApptId) { a=apts[i]; break; }
+  if (!a) return;
+  a.status = el('ea-status').value;
+  closeM('m-edit-appt');
+  toast('預約狀態已更新');
+  renderAppts('','');
+  renderCal();
+  if (isOnline) {
+    fetch(SCRIPT_URL, {
+      method:'POST', headers:{'Content-Type':'text/plain'},
+      body: JSON.stringify({
+        action:'update', sheet:'預約管理', id:editingApptId, idField:'預約ID',
+        data:{'預約ID':a.id,'客戶代號':a.cid,'日期':a.date,'時間':a.time,'服務類別':a.cat,'預約項目':a.item,'負責人員':a.staff,'預約狀態':a.status,'備註':''}
+      })
+    }).then(function(){ showBanner('✓ 預約狀態已同步', 'ok'); });
+  }
+}
+
+// ── 編輯交易（管理員限定）──
+function openEditTx(id) {
+  if (!document.body.classList.contains('is-admin')) { toast('此功能僅限管理員'); return; }
+  var t = null;
+  for (var i=0; i<txs.length; i++) if (txs[i].id===id) { t=txs[i]; break; }
+  if (!t) return;
+  editingTxId = id;
+  el('etx-client').value = gc(t.cid).name + '（' + t.cid + '）';
+  el('etx-date').value = t.date||'';
+  el('etx-cat').value = t.cat||'';
+  el('etx-type').value = t.type||'';
+  el('etx-item').value = t.item||'';
+  el('etx-cnt').value = t.cnt||1;
+  el('etx-amt').value = t.amt||0;
+  el('etx-pay').value = t.pay||'現金';
+  el('etx-staff').value = t.staff||'';
+  openM('m-edit-tx');
+}
+
+function saveEditTx() {
+  var t = null;
+  for (var i=0; i<txs.length; i++) if (txs[i].id===editingTxId) { t=txs[i]; break; }
+  if (!t) return;
+  t.date = el('etx-date').value;
+  t.cat = el('etx-cat').value;
+  t.type = el('etx-type').value;
+  t.item = el('etx-item').value;
+  t.cnt = parseFloat(el('etx-cnt').value)||1;
+  t.amt = parseFloat(el('etx-amt').value)||0;
+  t.pay = el('etx-pay').value;
+  t.staff = el('etx-staff').value;
+  closeM('m-edit-tx');
+  toast('交易記錄已更新');
+  renderTx('','');
+  renderDash();
+  if (isOnline) {
+    fetch(SCRIPT_URL, {
+      method:'POST', headers:{'Content-Type':'text/plain'},
+      body: JSON.stringify({
+        action:'update', sheet:'交易記錄', id:editingTxId, idField:'交易序號',
+        data:{'交易序號':t.id,'客戶代號':t.cid,'日期':t.date,'服務類別':t.cat,'交易類型':t.type,'交易項目':t.item,'次數':t.cnt,'金額':t.amt,'收款方式':t.pay,'服務人員':t.staff,'備註':''}
+      })
+    }).then(function(){ showBanner('✓ 交易記錄已同步', 'ok'); });
+  }
+}
+
+
+// ─── INIT ───
+var today = new Date().toISOString().slice(0,10);
+var dateInputs = document.querySelectorAll('input[type=date]');
+for (var i=0; i<dateInputs.length; i++) if (!dateInputs[i].value) dateInputs[i].value = today;
+// 登入後才載入資料
+renderDash();
+</script>
+</body>
+</html>
