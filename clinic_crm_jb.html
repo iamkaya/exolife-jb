@@ -711,23 +711,30 @@ body.is-admin .admin-only-block { display:block; }
   </div>
 </div>
 
-<!-- EDIT APPOINTMENT STATUS MODAL -->
+<!-- EDIT APPOINTMENT MODAL -->
 <div class="ov" id="m-edit-appt">
-  <div class="modal" style="width:400px">
-    <div class="mhd"><div><div class="mtitle">更新預約狀態</div></div><button class="mclose" onclick="closeM('m-edit-appt')">×</button></div>
+  <div class="modal" style="width:480px">
+    <div class="mhd"><div><div class="mtitle">編輯預約</div><div class="msub">可修改日期、時間、項目與狀態</div></div><button class="mclose" onclick="closeM('m-edit-appt')">×</button></div>
     <div class="mbody">
       <div class="fg2">
-        <div class="fg full"><label>客戶</label><input id="ea-client" disabled style="opacity:0.6;"></div>
-        <div class="fg full"><label>預約項目</label><input id="ea-item" disabled style="opacity:0.6;"></div>
-        <div class="fg"><label>日期 / 時間</label><input id="ea-datetime" disabled style="opacity:0.6;"></div>
-        <div class="fg"><label>預約狀態 *</label>
+        <div class="fg full"><label>客戶</label><input id="ea-client" disabled style="opacity:0.6;background:var(--bg3);"></div>
+        <div class="fg"><label>日期 *</label><input type="date" id="ea-date"></div>
+        <div class="fg"><label>時間 *</label><input type="time" id="ea-time"></div>
+        <div class="fg"><label>服務類別</label>
+          <select id="ea-cat">
+            <option value="">請選擇</option><option>疼痛治療</option><option>抗衰老</option>
+          </select>
+        </div>
+        <div class="fg"><label>負責人員</label><input id="ea-staff" placeholder="姓名"></div>
+        <div class="fg full"><label>預約項目</label><input id="ea-item" placeholder="例：精準Exo第2次、物理治療…"></div>
+        <div class="fg"><label>預約狀態</label>
           <select id="ea-status">
             <option>已確認</option><option>待確認</option><option>已完成</option><option>爽約</option><option>已取消</option>
           </select>
         </div>
       </div>
     </div>
-    <div class="mft"><button class="btn btn-outline" onclick="closeM('m-edit-appt')">取消</button><button class="btn btn-gold" onclick="saveEditAppt()">更新狀態</button></div>
+    <div class="mft"><button class="btn btn-outline" onclick="closeM('m-edit-appt')">取消</button><button class="btn btn-gold" onclick="saveEditAppt()">儲存修改</button></div>
   </div>
 </div>
 
@@ -833,6 +840,7 @@ function renderCal() {
     d.setHours(0,0,0,0);
 
     var dayStr = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    // Normalize: ensure apt dates are strings in yyyy-mm-dd format
     var isToday = d.getTime() === today.getTime();
     var isPast = d < today;
     var dayOfWeek = d.getDay(); // 0=Sun,6=Sat
@@ -843,10 +851,17 @@ function renderCal() {
     else if (isPast) numClass += ' past';
     if (isWeekend && !isToday) numClass += ' weekend';
 
-    // Find appointments for this day
+    // Find appointments for this day (normalize date format)
     var dayApts = [];
     for (var j = 0; j < apts.length; j++) {
-      if (apts[j].date === dayStr) dayApts.push(apts[j]);
+      var aptDate = apts[j].date;
+      // Handle Date objects or strings from Sheets
+      if (aptDate instanceof Date) {
+        aptDate = aptDate.getFullYear() + '-' + String(aptDate.getMonth()+1).padStart(2,'0') + '-' + String(aptDate.getDate()).padStart(2,'0');
+      } else if (typeof aptDate === 'string') {
+        aptDate = aptDate.split('T')[0]; // strip time if present
+      }
+      if (aptDate === dayStr) dayApts.push(apts[j]);
     }
 
     var evtHtml = '';
@@ -1039,7 +1054,6 @@ function openDetail(id) {
   var c = null;
   for (var i=0; i<clients.length; i++) if (clients[i].id===id) { c=clients[i]; break; }
   if (!c) return;
-
   var ctxs=[], ctrs=[], caps=[];
   for (var i=0; i<txs.length; i++) if (txs[i].cid===id) ctxs.push(txs[i]);
   for (var i=0; i<trs.length; i++) if (trs[i].cid===id) ctrs.push(trs[i]);
@@ -1056,7 +1070,7 @@ function openDetail(id) {
   if (ctxs.length) {
     for (var i=0; i<ctxs.length; i++) {
       var t=ctxs[i];
-      txH += '<div class="arow"><div class="adot" style="background:'+(txDotC[t.type]||'#B8965A')+'"></div><div class="acnt"><div class="atitle">'+( t.item||t.type)+' '+tb(t.type)+' '+catb(t.cat)+'</div><div class="asub">'+fd(t.date)+' · '+t.pay+'</div></div><span class="aamt">'+(t.amt>0?money(t.amt):t.cnt+'次')+'</span></div>';
+      txH += '<div class="arow"><div class="adot" style="background:'+(txDotC[t.type]||'#B8965A')+'"></div><div class="acnt"><div class="atitle">'+(t.item||t.type)+' '+tb(t.type)+' '+catb(t.cat)+'</div><div class="asub">'+fd(t.date)+' · '+t.pay+'</div></div><span class="aamt">'+(t.amt>0?money(t.amt):t.cnt+'次')+'</span></div>';
     }
   } else txH = '<div class="empty-s"><div class="ei">◇</div><div class="et">暫無交易記錄</div></div>';
 
@@ -1078,9 +1092,26 @@ function openDetail(id) {
     }
   } else apH = '<div class="empty-s"><div class="ei">◻</div><div class="et">暫無預約</div></div>';
 
+  // Build hero buttons
+  var editBtn = '<button class="btn btn-sm" onclick="openEditClient(\''+c.id+'\')" style="font-size:10px;padding:4px 10px;background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.85);border:1px solid rgba(255,255,255,0.22);">✎ 編輯</button>';
+  var delBtn = document.body.classList.contains('is-admin')
+    ? '<button class="btn btn-sm" onclick="deleteClient(\''+c.id+'\')" style="font-size:10px;padding:4px 10px;background:rgba(192,98,74,0.30);color:#ffaaaa;border:1px solid rgba(192,98,74,0.4);">✕ 刪除客戶</button>'
+    : '';
+
   el('cd-body').innerHTML =
-    '<div class="dhero"><div class="hav">'+c.name[0]+'</div><div class="hname">'+c.name+'</div><div class="hmeta"><span class="hcode">'+c.id+'</span>'+sb(c.status)+srcb(c.src)+'</div><div class="hspend"><div class="hslbl">累計消費</div><div class="hsval">'+money(c.spend)+'</div></div><button class="btn btn-outline btn-sm" onclick="openEditClient(\''+c.id+'\')" style="position:absolute;bottom:16px;left:22px;font-size:10px;border-color:rgba(255,255,255,0.2);color:rgba(255,255,255,0.6);">✎ 編輯資料</button></div>' +
-    '<div class="dtabs"><div class="dtab active" onclick="swTab(this,\'di\')">基本資料</div><div class="dtab" onclick="swTab(this,\'dtt\')">交易 ('+ctxs.length+')</div><div class="dtab" onclick="swTab(this,\'dtr\')">療程 ('+ctrs.length+')</div><div class="dtab" onclick="swTab(this,\'dap\')">預約 ('+caps.length+')</div></div>' +
+    '<div class="dhero">' +
+      '<div class="hav">'+c.name[0]+'</div>' +
+      '<div class="hname">'+c.name+'</div>' +
+      '<div class="hmeta"><span class="hcode">'+c.id+'</span>'+sb(c.status)+srcb(c.src)+'</div>' +
+      '<div class="hspend"><div class="hslbl">累計消費</div><div class="hsval">'+money(c.spend)+'</div></div>' +
+      '<div style="position:absolute;top:14px;right:14px;display:flex;gap:6px;">'+editBtn+delBtn+'</div>' +
+    '</div>' +
+    '<div class="dtabs">' +
+      '<div class="dtab active" onclick="swTab(this,\'di\')">基本資料</div>' +
+      '<div class="dtab" onclick="swTab(this,\'dtt\')">交易 ('+ctxs.length+')</div>' +
+      '<div class="dtab" onclick="swTab(this,\'dtr\')">療程 ('+ctrs.length+')</div>' +
+      '<div class="dtab" onclick="swTab(this,\'dap\')">預約 ('+caps.length+')</div>' +
+    '</div>' +
     '<div class="dtc active" id="di"><div class="igrid">'+infoHtml+'</div></div>' +
     '<div class="dtc" id="dtt">'+txH+'</div>' +
     '<div class="dtc" id="dtr">'+trH+'</div>' +
@@ -1291,11 +1322,25 @@ function loadFromSheets() {
         };});
       }
       if (d['預約管理'] && d['預約管理'].length > 0) {
-        apts = d['預約管理'].map(function(r){ return {
-          id: r['預約ID'], cid: r['客戶代號'], date: r['日期'],
-          time: r['時間'], cat: r['服務類別'], item: r['預約項目'],
-          staff: r['負責人員'], status: r['預約狀態']
-        };});
+        apts = d['預約管理'].map(function(r){
+          // Normalize date - may come as Date object or string
+          var aptDate = r['日期'];
+          if (aptDate && typeof aptDate === 'object' && aptDate.getFullYear) {
+            aptDate = aptDate.getFullYear() + '-' + String(aptDate.getMonth()+1).padStart(2,'0') + '-' + String(aptDate.getDate()).padStart(2,'0');
+          } else if (typeof aptDate === 'string') {
+            aptDate = aptDate.split('T')[0];
+          }
+          // Normalize time - Sheets may return full datetime, extract HH:MM
+          var aptTime = r['時間'];
+          if (aptTime && typeof aptTime === 'string' && aptTime.length > 5) {
+            aptTime = aptTime.substring(0, 5); // take first 5 chars HH:MM
+          }
+          return {
+            id: r['預約ID'], cid: r['客戶代號'], date: aptDate,
+            time: aptTime || '', cat: r['服務類別'], item: r['預約項目'],
+            staff: r['負責人員'], status: r['預約狀態']
+          };
+        });
       }
       el('client-count').textContent = clients.length;
       renderDash();
@@ -1415,6 +1460,7 @@ function saveEditClient() {
   c.blood = el('ec-blood').value;
   c.status = el('ec-status').value;
   c.note = el('ec-note').value;
+  // firstVisit is preserved - never overwritten on edit
   closeM('m-edit-client');
   toast('客戶資料已更新');
   renderClients('','');
@@ -1438,9 +1484,12 @@ function openEditAppt(id) {
   editingApptId = id;
   var cname = gc(a.cid).name || a.cid;
   el('ea-client').value = cname + '（' + a.cid + '）';
-  el('ea-item').value = a.item||'';
-  el('ea-datetime').value = fd(a.date) + ' ' + a.time;
-  el('ea-status').value = a.status||'已確認';
+  el('ea-date').value = a.date || new Date().toISOString().slice(0,10);
+  el('ea-time').value = a.time || '10:00';
+  el('ea-cat').value = a.cat || '';
+  el('ea-staff').value = a.staff || '';
+  el('ea-item').value = a.item || '';
+  el('ea-status').value = a.status || '已確認';
   openM('m-edit-appt');
 }
 
@@ -1448,11 +1497,17 @@ function saveEditAppt() {
   var a = null;
   for (var i=0; i<apts.length; i++) if (apts[i].id===editingApptId) { a=apts[i]; break; }
   if (!a) return;
+  a.date = el('ea-date').value;
+  a.time = el('ea-time').value;
+  a.cat = el('ea-cat').value;
+  a.staff = el('ea-staff').value;
+  a.item = el('ea-item').value;
   a.status = el('ea-status').value;
   closeM('m-edit-appt');
-  toast('預約狀態已更新');
+  toast('預約已更新');
   renderAppts('','');
   renderCal();
+  renderDash();
   if (isOnline) {
     fetch(SCRIPT_URL, {
       method:'POST', headers:{'Content-Type':'text/plain'},
@@ -1460,7 +1515,7 @@ function saveEditAppt() {
         action:'update', sheet:'預約管理', id:editingApptId, idField:'預約ID',
         data:{'預約ID':a.id,'客戶代號':a.cid,'日期':a.date,'時間':a.time,'服務類別':a.cat,'預約項目':a.item,'負責人員':a.staff,'預約狀態':a.status,'備註':''}
       })
-    }).then(function(){ showBanner('✓ 預約狀態已同步', 'ok'); });
+    }).then(function(){ showBanner('✓ 預約已同步至 Google Sheets', 'ok'); });
   }
 }
 
