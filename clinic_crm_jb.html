@@ -1168,10 +1168,15 @@ function mkId(pfx, arr) {
   var n = new Date();
   var ym = String(n.getFullYear()).slice(2) + String(n.getMonth()+1).padStart(2,'0');
   var p = pfx+ym+'-';
-  var cnt = 0;
-  for (var i=0; i<arr.length; i++) if (arr[i].id.indexOf(p)===0) cnt++;
   var pad = pfx==='TR' ? 4 : 3;
-  return p+String(cnt+1).padStart(pad,'0');
+  var max = 0;
+  for (var i=0; i<arr.length; i++) {
+    if (arr[i].id.indexOf(p)===0) {
+      var num = parseInt(arr[i].id.slice(p.length), 10);
+      if (num > max) max = num;
+    }
+  }
+  return p+String(max+1).padStart(pad,'0');
 }
 
 // ─── SAVE ───
@@ -1230,9 +1235,9 @@ function saveTr() {
   var cid = el('tr-c').value;
   if (!cid) { toast('請選擇客戶'); return; }
   var n=new Date(), ym=String(n.getFullYear()).slice(2)+String(n.getMonth()+1).padStart(2,'0');
-  var p='TM'+ym+'-', cnt=0;
-  for (var i=0;i<trs.length;i++) if (trs[i].id.indexOf(p)===0) cnt++;
-  var id=p+String(cnt+1).padStart(4,'0');
+  var p='TM'+ym+'-', max=0;
+  for (var i=0;i<trs.length;i++) if (trs[i].id.indexOf(p)===0) { var n2=parseInt(trs[i].id.slice(p.length),10); if(n2>max) max=n2; }
+  var id=p+String(max+1).padStart(4,'0');
   trs.unshift({id:id,cid:cid,date:el('tr-d').value,cat:el('tr-cat').value,name:el('tr-nm').value,ses:parseInt(el('tr-ses').value)||1,doc:el('tr-dr').value,area:el('tr-ar').value,before:el('tr-bf').value,after:el('tr-af').value,next:el('tr-nx').value,note:el('tr-nt').value});
   closeM('mtr');
   toast('療程記錄已儲存');
@@ -1250,9 +1255,9 @@ function saveAp() {
   var cid = el('ap-c').value;
   if (!cid) { toast('請選擇客戶'); return; }
   var n=new Date(), ym=String(n.getFullYear()).slice(2)+String(n.getMonth()+1).padStart(2,'0');
-  var p='AP'+ym+'-', cnt=0;
-  for (var i=0;i<apts.length;i++) if (apts[i].id.indexOf(p)===0) cnt++;
-  var id=p+String(cnt+1).padStart(4,'0');
+  var p='AP'+ym+'-', max=0;
+  for (var i=0;i<apts.length;i++) if (apts[i].id.indexOf(p)===0) { var n2=parseInt(apts[i].id.slice(p.length),10); if(n2>max) max=n2; }
+  var id=p+String(max+1).padStart(4,'0');
   apts.unshift({id:id,cid:cid,date:el('ap-d').value,time:el('ap-t').value,cat:el('ap-cat').value,item:el('ap-it').value,staff:el('ap-st').value,status:el('ap-s').value});
   closeM('ma');
   toast('預約已建立');
@@ -1390,7 +1395,7 @@ function showBanner(msg, type) {
 // ══════════════════════════════════════════════
 var PASSWORDS = {
   staff: 'exolifejb',      // 員工密碼
-  admin: 'exolife@Admin'     // 管理員密碼（請改成你自己的）
+  admin: 'e5765576'     // 管理員密碼（請改成你自己的）
 };
 
 var currentRole = 'staff';  // 當前登入角色
