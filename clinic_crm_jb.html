@@ -177,7 +177,7 @@ tbody td { padding:11px 14px; font-size:12px; color:var(--ink2); }
 .hname { font-family:'Cormorant Garamond',serif; font-size:22px; font-weight:300; color:#FAF8F4; margin-bottom:5px; }
 .hmeta { display:flex; gap:6px; flex-wrap:wrap; }
 .hcode { font-family:'DM Mono',monospace; font-size:11px; color:rgba(184,220,232,.72); }
-.hspend { position:absolute; right:20px; top:20px; text-align:right; }
+.hspend { display:inline-block; margin-top:8px; }
 .hslbl { font-size:9px; color:rgba(225,240,245,.45); letter-spacing:1.4px; text-transform:uppercase; margin-bottom:2px; }
 .hsval { font-family:'Cormorant Garamond',serif; font-size:24px; font-weight:300; color:#b8dce8; }
 .dtabs { display:flex; margin-bottom:13px; border-bottom:1px solid var(--border); }
@@ -373,7 +373,7 @@ body.is-admin .admin-only-block { display:block; }
   <div class="topbar">
     <div class="topbar-title" id="page-title">概覽</div>
     <div class="topbar-r">
-      <button class="btn btn-outline" onclick="openM('mc')">＋ 新增客戶</button>
+      <button class="btn btn-outline" onclick="populateRefSelect('nc-ref','');openM('mc')">＋ 新增客戶</button>
       <button class="btn btn-gold" onclick="openM('mt')">＋ 新增交易</button>
     </div>
   </div>
@@ -606,7 +606,7 @@ body.is-admin .admin-only-block { display:block; }
       <div class="fg"><label>WhatsApp / LINE</label><input id="nc-sns" placeholder="帳號或電話"></div>
       <div class="fdiv"><span>轉介來源</span></div>
       <div class="fg"><label>來源類型</label><select id="nc-src" onchange="toggleSrc()"><option value="">請選擇</option><option>老客戶推薦</option><option>說明會/活動</option><option>社群媒體</option><option>廣告</option><option>自然到訪</option></select></div>
-      <div class="fg" id="nc-rg"><label>推薦人代號</label><input id="nc-ref" placeholder="例：JB2511-001"></div>
+      <div class="fg" id="nc-rg"><label>推薦人</label><select id="nc-ref"><option value="">— 請選擇推薦人 —</option></select></div>
       <div class="fg" id="nc-eg"><label>說明會 / 活動名稱</label><input id="nc-evt" placeholder="活動名稱"></div>
       <div class="fg"><label>負責諮詢師</label><input id="nc-con" placeholder="姓名"></div>
       <div class="fdiv"><span>健康資訊</span></div>
@@ -702,12 +702,22 @@ body.is-admin .admin-only-block { display:block; }
       <div class="fg"><label>WhatsApp / LINE</label><input id="ec-sns"></div>
       <div class="fdiv"><span>其他</span></div>
       <div class="fg"><label>負責諮詢師</label><input id="ec-con"></div>
+      <div class="fg"><label>推薦人</label><select id="ec-ref"><option value="">— 請選擇推薦人 —</option></select></div>
       <div class="fg"><label>健康訴求</label><input id="ec-concern"></div>
       <div class="fg"><label>血液檢測</label><select id="ec-blood"><option>No</option><option>Yes</option></select></div>
       <div class="fg"><label>客戶狀態</label><select id="ec-status"><option>活躍</option><option>定期回診</option><option>待追蹤</option><option>休眠</option></select></div>
       <div class="fg full"><label>備註</label><textarea id="ec-note"></textarea></div>
     </div></div>
     <div class="mft"><button class="btn btn-outline" onclick="closeM('m-edit-client')">取消</button><button class="btn btn-gold" onclick="saveEditClient()">儲存修改</button></div>
+  </div>
+</div>
+
+<!-- VIEW TREATMENT MODAL -->
+<div class="ov" id="m-view-tr">
+  <div class="modal" style="max-width:520px">
+    <div class="mhd"><div><div class="mtitle" id="vtr-title">療程詳情</div><div class="msub" id="vtr-sub"></div></div><button class="mclose" onclick="closeM('m-view-tr')">×</button></div>
+    <div class="mbody" id="vtr-body" style="padding:20px 24px;"></div>
+    <div class="mft"><button class="btn btn-outline" onclick="closeM('m-view-tr')">關閉</button></div>
   </div>
 </div>
 
@@ -985,6 +995,37 @@ function renderTx(f, cf) {
 function filterTx() { renderTx(el('tx-search').value, el('tx-cat-f').value); }
 
 // ─── TREATMENTS ───
+function openViewTr(id) {
+  var t = null;
+  for (var i=0;i<trs.length;i++) if (trs[i].id===id) { t=trs[i]; break; }
+  if (!t) return;
+  var cname = gc(t.cid).name || t.cid;
+  document.getElementById('vtr-title').textContent = (t.name||'療程詳情') + '　第 ' + t.ses + ' 次';
+  document.getElementById('vtr-sub').textContent = cname + '　' + fd(t.date) + '　' + (t.doc||'未指定');
+  var fields = [
+    ['客戶', cname + '（' + t.cid + '）'],
+    ['日期', fd(t.date)],
+    ['服務類別', t.cat||'—'],
+    ['療程名稱', t.name||'—'],
+    ['第幾次', '第 ' + t.ses + ' 次'],
+    ['醫師/治療師', t.doc||'—'],
+    ['治療部位', t.area||'—'],
+    ['治療前狀況', t.before||'—'],
+    ['治療後狀況', t.after||'—'],
+    ['下次預約日', t.next ? fd(t.next) : '—'],
+    ['注意事項', t.note||'—']
+  ];
+  var html = '<table style="width:100%;border-collapse:collapse;">';
+  for (var i=0;i<fields.length;i++) {
+    html += '<tr style="border-bottom:1px solid var(--border)">' +
+      '<td style="padding:9px 6px 9px 0;font-size:12px;color:var(--ink3);white-space:nowrap;width:90px;vertical-align:top">' + fields[i][0] + '</td>' +
+      '<td style="padding:9px 0 9px 6px;font-size:13px;color:var(--ink1);line-height:1.5">' + fields[i][1] + '</td></tr>';
+  }
+  html += '</table>';
+  document.getElementById('vtr-body').innerHTML = html;
+  openM('m-view-tr');
+}
+
 function renderTreatments(f, cf) {
   var html = '';
   var shown = 0;
@@ -997,7 +1038,7 @@ function renderTreatments(f, cf) {
     if (!matchQ || !matchC) continue;
     shown++;
     var nextColor = t.next ? 'color:var(--rose)' : 'color:var(--ink4)';
-    html += '<tr><td><span class="cc">'+t.id+'</span></td><td><span class="cp">'+cname+'</span></td><td style="color:var(--ink3)">'+fd(t.date)+'</td><td>'+catb(t.cat)+'</td><td style="color:var(--ink2)">'+t.name+'</td><td><span class="cm">第 '+t.ses+' 次</span></td><td style="color:var(--ink2)">'+(t.doc||'—')+'</td><td style="'+nextColor+'">'+(t.next?fd(t.next):'—')+'</td><td class="admin-only"><button class="btn btn-sm" onclick="deleteTr(\''+t.id+'\')" style="font-size:10px;padding:3px 8px;background:rgba(192,98,74,0.12);color:var(--rose);border:1px solid rgba(192,98,74,0.25);">刪除</button></td></tr>';
+    html += '<tr><td><span class="cc">'+t.id+'</span></td><td><span class="cp">'+cname+'</span></td><td style="color:var(--ink3)">'+fd(t.date)+'</td><td>'+catb(t.cat)+'</td><td style="color:var(--ink2)">'+t.name+'</td><td><span class="cm">第 '+t.ses+' 次</span></td><td style="color:var(--ink2)">'+(t.doc||'—')+'</td><td style="'+nextColor+'">'+(t.next?fd(t.next):'—')+'</td><td style="white-space:nowrap"><button class="btn btn-outline btn-sm" onclick="openViewTr(\''+t.id+'\')" style="font-size:10px;padding:3px 8px;">查看</button> <button class="btn btn-sm admin-only" onclick="deleteTr(\''+t.id+'\')" style="font-size:10px;padding:3px 8px;background:rgba(192,98,74,0.12);color:var(--rose);border:1px solid rgba(192,98,74,0.25);">刪除</button></td></tr>';
   }
   if (!shown) html = '<tr><td colspan="8"><div class="empty-s"><div class="ei">✦</div><div class="et">暫無療程記錄</div></div></td></tr>';
   el('tr-tbody').innerHTML = html;
@@ -1103,8 +1144,8 @@ function openDetail(id) {
       '<div class="hav">'+c.name[0]+'</div>' +
       '<div class="hname">'+c.name+'</div>' +
       '<div class="hmeta"><span class="hcode">'+c.id+'</span>'+sb(c.status)+srcb(c.src)+'</div>' +
-      '<div class="hspend"><div class="hslbl">累計消費</div><div class="hsval">'+money(c.spend)+'</div></div>' +
       '<div style="position:absolute;top:14px;right:14px;display:flex;gap:6px;">'+editBtn+delBtn+'</div>' +
+      '<div class="hspend"><div class="hslbl">累計消費</div><div class="hsval">'+money(c.spend)+'</div></div>' +
     '</div>' +
     '<div class="dtabs">' +
       '<div class="dtab active" onclick="swTab(this,\'di\')">基本資料</div>' +
@@ -1335,10 +1376,17 @@ function loadFromSheets() {
           } else if (typeof aptDate === 'string') {
             aptDate = aptDate.split('T')[0];
           }
-          // Normalize time - Sheets may return full datetime, extract HH:MM
+          // Normalize time - Sheets may return Date object or string
           var aptTime = r['時間'];
-          if (aptTime && typeof aptTime === 'string' && aptTime.length > 5) {
-            aptTime = aptTime.substring(0, 5); // take first 5 chars HH:MM
+          if (aptTime && typeof aptTime === 'object' && aptTime.getHours) {
+            aptTime = String(aptTime.getHours()).padStart(2,'0') + ':' + String(aptTime.getMinutes()).padStart(2,'0');
+          } else if (typeof aptTime === 'string') {
+            if (aptTime.indexOf('T') !== -1) {
+              var timePart = aptTime.split('T')[1] || '';
+              aptTime = timePart.substring(0, 5);
+            } else if (aptTime.length > 5) {
+              aptTime = aptTime.substring(0, 5);
+            }
           }
           return {
             id: r['預約ID'], cid: r['客戶代號'], date: aptDate,
@@ -1429,6 +1477,20 @@ function doLogin() {
 }
 
 // ── 編輯客戶 ──
+function populateRefSelect(selectId, currentVal) {
+  var sel = document.getElementById(selectId);
+  if (!sel) return;
+  while (sel.options.length > 1) sel.remove(1);
+  for (var i = 0; i < clients.length; i++) {
+    var c = clients[i];
+    var opt = document.createElement('option');
+    opt.value = c.id;
+    opt.textContent = c.name + '（' + c.id + '）';
+    if (c.id === currentVal) opt.selected = true;
+    sel.appendChild(opt);
+  }
+}
+
 function openEditClient(id) {
   var c = null;
   for (var i=0; i<clients.length; i++) if (clients[i].id===id) { c=clients[i]; break; }
@@ -1442,6 +1504,7 @@ function openEditClient(id) {
   el('ec-phone').value = c.phone||'';
   el('ec-sns').value = c.sns||'';
   el('ec-con').value = c.con||'';
+  populateRefSelect('ec-ref', c.ref||'');
   el('ec-concern').value = c.concern||'';
   el('ec-blood').value = c.blood||'No';
   el('ec-status').value = c.status||'活躍';
@@ -1460,6 +1523,7 @@ function saveEditClient() {
   c.email = el('ec-email').value;
   c.phone = el('ec-phone').value;
   c.sns = el('ec-sns').value;
+  c.ref = el('ec-ref').value;
   c.con = el('ec-con').value;
   c.concern = el('ec-concern').value;
   c.blood = el('ec-blood').value;
