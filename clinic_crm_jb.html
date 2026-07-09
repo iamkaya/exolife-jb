@@ -1038,7 +1038,7 @@ function renderTreatments(f, cf) {
     if (!matchQ || !matchC) continue;
     shown++;
     var nextColor = t.next ? 'color:var(--rose)' : 'color:var(--ink4)';
-    html += '<tr><td><span class="cc">'+t.id+'</span></td><td><span class="cp">'+cname+'</span></td><td style="color:var(--ink3)">'+fd(t.date)+'</td><td>'+catb(t.cat)+'</td><td style="color:var(--ink2)">'+t.name+'</td><td><span class="cm">第 '+t.ses+' 次</span></td><td style="color:var(--ink2)">'+(t.doc||'—')+'</td><td style="'+nextColor+'">'+(t.next?fd(t.next):'—')+'</td><td style="white-space:nowrap"><button class="btn btn-outline btn-sm" onclick="openViewTr(\''+t.id+'\')" style="font-size:10px;padding:3px 8px;">查看</button> <button class="btn btn-sm admin-only" onclick="deleteTr(\''+t.id+'\')" style="font-size:10px;padding:3px 8px;background:rgba(192,98,74,0.12);color:var(--rose);border:1px solid rgba(192,98,74,0.25);">刪除</button></td></tr>';
+    html += '<tr><td><span class="cc">'+t.id+'</span></td><td><span class="cp">'+cname+'</span></td><td style="color:var(--ink3)">'+fd(t.date)+'</td><td>'+catb(t.cat)+'</td><td style="color:var(--ink2)">'+t.name+'</td><td><span class="cm">第 '+t.ses+' 次</span></td><td style="color:var(--ink2)">'+(t.doc||'—')+'</td><td style="'+nextColor+'">'+(t.next?fd(t.next):'—')+'</td><td style="white-space:nowrap"><button class="btn btn-outline btn-sm" onclick="openViewTr(\\\''+t.id+''\\\')" style="font-size:10px;padding:3px 8px;">查看</button> <button class="btn btn-sm admin-only" onclick="deleteTr(\''+t.id+'\')" style="font-size:10px;padding:3px 8px;background:rgba(192,98,74,0.12);color:var(--rose);border:1px solid rgba(192,98,74,0.25);">刪除</button></td></tr>';
   }
   if (!shown) html = '<tr><td colspan="8"><div class="empty-s"><div class="ei">✦</div><div class="et">暫無療程記錄</div></div></td></tr>';
   el('tr-tbody').innerHTML = html;
@@ -1376,14 +1376,14 @@ function loadFromSheets() {
           } else if (typeof aptDate === 'string') {
             aptDate = aptDate.split('T')[0];
           }
-          // Normalize time - Sheets may return Date object or string
+          // Normalize time - Sheets may return full datetime, extract HH:MM
           var aptTime = r['時間'];
           if (aptTime && typeof aptTime === 'object' && aptTime.getHours) {
             aptTime = String(aptTime.getHours()).padStart(2,'0') + ':' + String(aptTime.getMinutes()).padStart(2,'0');
           } else if (typeof aptTime === 'string') {
-            if (aptTime.indexOf('T') !== -1) {
-              var timePart = aptTime.split('T')[1] || '';
-              aptTime = timePart.substring(0, 5);
+            if (aptTime.indexOf('1899') !== -1 || aptTime.indexOf('T') !== -1) {
+              var tParts = aptTime.split('T');
+              if (tParts.length > 1) aptTime = tParts[1].substring(0,5); else aptTime = '';
             } else if (aptTime.length > 5) {
               aptTime = aptTime.substring(0, 5);
             }
